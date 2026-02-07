@@ -4,20 +4,22 @@ import type { AgentState, Trip } from "@/types/travel";
 import { Activity, Loader2, Pause, Search, CheckCircle2, Eye, PauseCircle } from "lucide-react";
 import { useState, useEffect } from "react";
 
-const stateConfig: Record<AgentState, { icon: React.ElementType; color: string; badgeVariant: "status" | "success" | "accent" | "muted" | "destructive"; modeText: string; taskText: string }> = {
-  "Idle": { icon: Pause, color: "text-muted-foreground", badgeVariant: "muted", modeText: "Idle", taskText: "Standing by" },
-  "Initializing": { icon: Loader2, color: "text-primary", badgeVariant: "status", modeText: "Initializing", taskText: "Connecting to booking sources…" },
-  "Searching Flights": { icon: Search, color: "text-primary", badgeVariant: "status", modeText: "Searching", taskText: "Scanning airlines and fare classes…" },
-  "Searching Lodging": { icon: Search, color: "text-primary", badgeVariant: "status", modeText: "Searching", taskText: "Filtering lodging by your preferences…" },
-  "Searching Activities": { icon: Search, color: "text-primary", badgeVariant: "status", modeText: "Searching", taskText: "Discovering activities for your trip…" },
-  "Re-optimizing": { icon: Loader2, color: "text-accent", badgeVariant: "accent", modeText: "Re-optimizing", taskText: "Re-ranking options with new criteria…" },
-  "Re-optimizing (Flights)": { icon: Loader2, color: "text-accent", badgeVariant: "accent", modeText: "Re-optimizing", taskText: "Comparing nonstop flight options…" },
-  "Re-optimizing (Lodging)": { icon: Loader2, color: "text-accent", badgeVariant: "accent", modeText: "Re-optimizing", taskText: "Comparing lodging alternatives…" },
-  "Re-optimizing (Activities)": { icon: Loader2, color: "text-accent", badgeVariant: "accent", modeText: "Re-optimizing", taskText: "Curating better activities for you…" },
-  "Waiting for Approval": { icon: CheckCircle2, color: "text-accent", badgeVariant: "accent", modeText: "Awaiting approval", taskText: "Waiting for your decision…" },
-  "Monitoring": { icon: Eye, color: "text-success", badgeVariant: "success", modeText: "Monitoring", taskText: "Watching for price drops and new deals" },
-  "Paused": { icon: PauseCircle, color: "text-muted-foreground", badgeVariant: "muted", modeText: "Paused", taskText: "Monitoring paused" },
+const stateConfig: Record<AgentState, { icon: React.ElementType; color: string; badgeVariant: "status" | "success" | "accent" | "muted" | "destructive"; phase: string; taskText: string }> = {
+  "Idle": { icon: Pause, color: "text-muted-foreground", badgeVariant: "muted", phase: "Idle", taskText: "Standing by" },
+  "Initializing": { icon: Loader2, color: "text-primary", badgeVariant: "status", phase: "Scanning", taskText: "Connecting to booking sources…" },
+  "Searching Flights": { icon: Search, color: "text-primary", badgeVariant: "status", phase: "Scanning", taskText: "Scanning airlines and fare classes…" },
+  "Searching Lodging": { icon: Search, color: "text-primary", badgeVariant: "status", phase: "Filtering", taskText: "Filtering lodging by your preferences…" },
+  "Searching Activities": { icon: Search, color: "text-primary", badgeVariant: "status", phase: "Scanning", taskText: "Discovering activities for your trip…" },
+  "Re-optimizing": { icon: Loader2, color: "text-accent", badgeVariant: "accent", phase: "Ranking", taskText: "Re-ranking options with new criteria…" },
+  "Re-optimizing (Flights)": { icon: Loader2, color: "text-accent", badgeVariant: "accent", phase: "Comparing", taskText: "Comparing nonstop flight options…" },
+  "Re-optimizing (Lodging)": { icon: Loader2, color: "text-accent", badgeVariant: "accent", phase: "Comparing", taskText: "Comparing lodging alternatives…" },
+  "Re-optimizing (Activities)": { icon: Loader2, color: "text-accent", badgeVariant: "accent", phase: "Comparing", taskText: "Curating better activities for you…" },
+  "Waiting for Approval": { icon: CheckCircle2, color: "text-accent", badgeVariant: "accent", phase: "Awaiting", taskText: "Waiting for your decision…" },
+  "Monitoring": { icon: Eye, color: "text-success", badgeVariant: "success", phase: "Monitoring", taskText: "Watching for price drops and new deals" },
+  "Paused": { icon: PauseCircle, color: "text-muted-foreground", badgeVariant: "muted", phase: "Paused", taskText: "Monitoring paused" },
 };
+
+const PHASES = ["Scanning", "Filtering", "Ranking", "Comparing", "Monitoring"] as const;
 
 interface AgentStatusProps {
   state: AgentState;
@@ -27,19 +29,20 @@ interface AgentStatusProps {
 export default function AgentStatus({ state, trip }: AgentStatusProps) {
   const config = stateConfig[state];
   const Icon = config.icon;
-  const isActive = !["Idle", "Paused"].includes(state);
-  const isMonitoring = state === "Monitoring";
+  const isAnimating = ["Initializing", "Searching Flights", "Searching Lodging", "Searching Activities", "Re-optimizing", "Re-optimizing (Flights)", "Re-optimizing (Lodging)", "Re-optimizing (Activities)"].includes(state);
   const [elapsed, setElapsed] = useState(0);
 
   useEffect(() => {
-    if (!isActive) {
+    if (!isAnimating) {
       setElapsed(0);
       return;
     }
     setElapsed(0);
     const interval = setInterval(() => setElapsed((e) => e + 1), 1000);
     return () => clearInterval(interval);
-  }, [isActive, state]);
+  }, [isAnimating, state]);
+
+  const currentPhaseIndex = PHASES.indexOf(config.phase as typeof PHASES[number]);
 
   return (
     <Card className="h-full">
@@ -50,7 +53,7 @@ export default function AgentStatus({ state, trip }: AgentStatusProps) {
             Agent Status
           </CardTitle>
           <Badge variant={config.badgeVariant} className="text-xs">
-            <Icon className={`h-3 w-3 mr-1 ${isActive && !isMonitoring ? "animate-spin" : ""}`} />
+            <Icon className={`h-3 w-3 mr-1 ${isAnimating ? "animate-spin" : ""}`} />
             {state}
           </Badge>
         </div>
@@ -63,41 +66,47 @@ export default function AgentStatus({ state, trip }: AgentStatusProps) {
           </p>
         </div>
 
-        {/* Agent Mode — honest, non-linear indicator */}
-        <div className="rounded-lg bg-secondary/40 p-3 space-y-2">
-          <div className="flex items-center justify-between">
-            <span className="text-xs text-muted-foreground">Agent Mode</span>
-            {isActive && !isMonitoring && (
-              <span className="text-[11px] font-mono text-primary">{elapsed}s elapsed</span>
+        {/* Phase pipeline instead of numbered steps */}
+        <div>
+          <div className="flex items-center justify-between text-xs text-muted-foreground mb-2">
+            <span>Agent Phase</span>
+            {isAnimating && (
+              <span className="font-mono text-primary">{elapsed}s elapsed</span>
             )}
           </div>
-          <div className="flex items-center gap-3">
-            {/* Heartbeat dot */}
-            <div className="relative flex items-center justify-center">
-              <div className={`h-3 w-3 rounded-full ${
-                isMonitoring ? "bg-success" :
-                isActive ? "bg-primary" :
-                "bg-muted-foreground/40"
-              }`} />
-              {(isActive || isMonitoring) && (
-                <div className={`absolute inset-0 h-3 w-3 rounded-full animate-ping opacity-75 ${
-                  isMonitoring ? "bg-success" : "bg-primary"
-                }`} />
-              )}
-            </div>
-            <p className="text-sm font-medium">
-              {isMonitoring
-                ? "Monitoring prices and options in real time"
-                : isActive
-                ? config.taskText
-                : config.taskText
-              }
-            </p>
+          <div className="flex items-center gap-1">
+            {PHASES.map((phase, i) => {
+              const isActive = config.phase === phase;
+              const isPast = currentPhaseIndex >= 0 && i < currentPhaseIndex;
+              const isPaused = state === "Paused";
+              return (
+                <div key={phase} className="flex-1 flex flex-col items-center gap-1">
+                  <div
+                    className={`h-1.5 w-full rounded-full transition-all duration-300 ${
+                      isActive
+                        ? "bg-primary animate-pulse"
+                        : isPast
+                        ? "bg-primary/40"
+                        : isPaused
+                        ? "bg-muted-foreground/20"
+                        : "bg-secondary"
+                    }`}
+                  />
+                  <span
+                    className={`text-[9px] font-mono transition-colors ${
+                      isActive ? "text-primary font-semibold" : isPast ? "text-muted-foreground" : "text-muted-foreground/40"
+                    }`}
+                  >
+                    {phase}
+                  </span>
+                </div>
+              );
+            })}
           </div>
         </div>
 
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
-          <div className={`h-2 w-2 rounded-full ${isActive ? "bg-primary animate-status-pulse" : isMonitoring ? "bg-success" : "bg-muted-foreground"}`} />
+          <div className={`h-2 w-2 rounded-full ${isAnimating ? "bg-primary animate-status-pulse" : state === "Monitoring" ? "bg-success" : state === "Paused" ? "bg-muted-foreground" : "bg-muted-foreground"}`} />
           <span className="font-mono">{config.taskText}</span>
         </div>
       </CardContent>
