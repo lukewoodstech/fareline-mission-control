@@ -12,6 +12,7 @@ import {
   Activity,
   ThumbsDown,
 } from "lucide-react";
+import { useRef, useEffect, useState } from "react";
 
 const typeIcons: Record<AgentAction["type"], React.ElementType> = {
   search: Search,
@@ -56,6 +57,19 @@ interface LiveActivityFeedProps {
 }
 
 export default function LiveActivityFeed({ actions }: LiveActivityFeedProps) {
+  const prevFirstIdRef = useRef(actions[0]?.id);
+  const [highlightId, setHighlightId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const currentFirstId = actions[0]?.id;
+    if (currentFirstId && currentFirstId !== prevFirstIdRef.current) {
+      prevFirstIdRef.current = currentFirstId;
+      setHighlightId(currentFirstId);
+      const timer = setTimeout(() => setHighlightId(null), 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [actions]);
+
   return (
     <Card>
       <CardHeader className="pb-3">
@@ -75,14 +89,22 @@ export default function LiveActivityFeed({ actions }: LiveActivityFeedProps) {
           <div className="space-y-0.5">
             {actions.map((action, idx) => {
               const Icon = typeIcons[action.type];
+              const isHighlighted = action.id === highlightId;
               return (
                 <div
                   key={action.id}
                   className={`flex items-start gap-3 py-2 px-3 rounded-lg transition-all hover:bg-secondary/50 ${
-                    idx === 0 ? "animate-slide-up bg-secondary/30" : ""
+                    idx === 0 ? "animate-slide-up" : ""
+                  } ${
+                    isHighlighted
+                      ? "bg-primary/8 ring-1 ring-primary/20 shadow-sm"
+                      : idx === 0
+                      ? "bg-secondary/30"
+                      : ""
                   }`}
                 >
-                  <div className={`mt-0.5 h-6 w-6 rounded-md flex items-center justify-center shrink-0 ${
+                  <div className={`mt-0.5 h-6 w-6 rounded-md flex items-center justify-center shrink-0 transition-all ${
+                    isHighlighted && action.type === "sms" ? "bg-accent/25 animate-sms-pop" :
                     action.type === "reject" ? "bg-destructive/15" :
                     action.type === "alert" || action.type === "sms" ? "bg-accent/15" :
                     "bg-secondary"
@@ -101,7 +123,7 @@ export default function LiveActivityFeed({ actions }: LiveActivityFeedProps) {
                         {typeLabels[action.type]}
                       </Badge>
                       {action.smsSent && (
-                        <Badge variant="accent" className="text-[10px] py-0 px-1.5">
+                        <Badge variant="accent" className={`text-[10px] py-0 px-1.5 ${isHighlighted ? "animate-sms-pop" : ""}`}>
                           <MessageSquare className="h-2.5 w-2.5 mr-0.5" />
                           SMS
                         </Badge>
