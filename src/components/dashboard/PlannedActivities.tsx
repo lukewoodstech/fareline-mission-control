@@ -12,6 +12,7 @@ import {
   Palette,
   PartyPopper,
   Leaf,
+  MapPin,
 } from "lucide-react";
 
 const categoryIcons = {
@@ -143,7 +144,15 @@ export default function PlannedActivities({
                             Book
                           </a>
                         ) : (
-                          <span className="text-[10px] text-muted-foreground/50">No booking needed</span>
+                          <a
+                            href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.activity.title)}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-xs text-muted-foreground hover:text-primary hover:underline flex items-center gap-1 font-medium"
+                          >
+                            <MapPin className="h-3 w-3" />
+                            View on Maps
+                          </a>
                         )}
                         <Button
                           variant="ghost"

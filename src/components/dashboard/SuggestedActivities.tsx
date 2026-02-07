@@ -23,6 +23,7 @@ import {
   Palette,
   PartyPopper,
   Leaf,
+  MapPin,
 } from "lucide-react";
 
 const REJECT_REASONS: ActivityRejectReason[] = [
@@ -208,7 +209,15 @@ function ActivityCard({
               </TooltipContent>
             </Tooltip>
           ) : (
-            <span className="text-xs text-muted-foreground/50">No booking needed</span>
+            <a
+              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(activity.title)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs text-muted-foreground hover:text-primary hover:underline flex items-center gap-1 transition-colors"
+            >
+              <MapPin className="h-3 w-3" />
+              View on Maps
+            </a>
           )}
           <div className="flex items-center gap-2">
             <Button

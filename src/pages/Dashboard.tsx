@@ -22,7 +22,6 @@ import DemoToggle from "@/components/dashboard/DemoToggle";
 import TripSwitcher from "@/components/dashboard/TripSwitcher";
 import SuggestedActivities from "@/components/dashboard/SuggestedActivities";
 import PlannedActivities from "@/components/dashboard/PlannedActivities";
-import ActivityControls from "@/components/dashboard/ActivityControls";
 import ActivityPreferences from "@/components/dashboard/ActivityPreferences";
 
 type DashboardTab = "flights" | "lodging" | "activities";
@@ -234,16 +233,11 @@ export default function Dashboard() {
                   onReject={activityStore.rejectActivity}
                 />
               </div>
-              <div className="lg:col-span-6 space-y-4">
+              <div className="lg:col-span-6">
                 <PlannedActivities
                   planned={activityStore.planned}
                   tripDepartDate={tripStore.activeTrip.departDate}
                   onRemove={activityStore.removeFromPlan}
-                />
-                <ActivityControls
-                  agentState={agentState}
-                  onReoptimize={activityStore.reoptimizeActivities}
-                  onSetAgentState={setAgentState}
                 />
               </div>
             </>
