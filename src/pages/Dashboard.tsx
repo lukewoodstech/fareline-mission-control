@@ -174,7 +174,15 @@ export default function Dashboard() {
               </div>
               <div className="lg:col-span-4 space-y-4">
                 <Controls key="lodging" activeTab="lodging" agentState={agentState} onReoptimize={tripStore.reoptimize} onSetAgentState={setAgentState} />
-                <LodgingPreferences initial={mockPreferences} destination={tripStore.activeTrip.destination} />
+                <LodgingPreferences
+                  initial={mockPreferences}
+                  destination={tripStore.activeTrip.destination}
+                  onNeighborhoodChange={(neighborhoods) => {
+                    if (neighborhoods.length > 0) {
+                      tripStore.reoptimize("lodging", `area priority: ${neighborhoods[0]}`);
+                    }
+                  }}
+                />
               </div>
             </>
           )}
