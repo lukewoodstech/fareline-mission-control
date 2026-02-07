@@ -29,6 +29,7 @@ const statusVariant: Record<TripStatus, "status" | "success" | "accent"> = {
 };
 
 function formatDate(d: string) {
+  if (!d) return "—";
   return new Date(d + "T00:00:00").toLocaleDateString("en-US", {
     month: "short",
     day: "numeric",
@@ -39,8 +40,8 @@ interface TripSwitcherProps {
   trips: Trip[];
   activeTrip: Trip | null;
   onSwitchTrip: (tripId: string) => void;
-  onCreateTrip: (trip: Omit<Trip, "id" | "status">) => void;
-  onDeleteTrip: (tripId: string) => void;
+  onCreateTrip?: (trip: Omit<Trip, "id" | "status">) => void;
+  onDeleteTrip?: (tripId: string) => void;
 }
 
 export default function TripSwitcher({
@@ -51,7 +52,7 @@ export default function TripSwitcher({
   onDeleteTrip,
 }: TripSwitcherProps) {
   const [modalOpen, setModalOpen] = useState(false);
-  const [deleteTrip, setDeleteTrip] = useState<Trip | null>(null);
+  const [deleteTripState, setDeleteTripState] = useState<Trip | null>(null);
 
   return (
     <>
@@ -88,80 +89,95 @@ export default function TripSwitcher({
                     <Badge variant={statusVariant[trip.status]} className="text-[10px] py-0 px-1.5">
                       {trip.status}
                     </Badge>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setDeleteTrip(trip);
-                      }}
-                      className="h-5 w-5 rounded flex items-center justify-center text-muted-foreground/50 hover:text-destructive hover:bg-destructive/10 transition-colors"
-                    >
-                      <Trash2 className="h-3 w-3" />
-                    </button>
+                    {onDeleteTrip && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setDeleteTripState(trip);
+                        }}
+                        className="h-5 w-5 rounded flex items-center justify-center text-muted-foreground/50 hover:text-destructive hover:bg-destructive/10 transition-colors"
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </button>
+                    )}
                   </div>
                 </div>
                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
                   <span>
                     {formatDate(trip.departDate)} – {formatDate(trip.returnDate)}
                   </span>
-                  <span>·</span>
-                  <span>${trip.budget}</span>
+                  {trip.budget > 0 && (
+                    <>
+                      <span>·</span>
+                      <span>${trip.budget}</span>
+                    </>
+                  )}
                 </div>
               </DropdownMenuItem>
             ))}
-            <DropdownMenuSeparator />
-            <DropdownMenuItem
-              className="py-2.5 px-3 cursor-pointer text-primary"
-              onClick={() => setModalOpen(true)}
-            >
-              <Plus className="h-3.5 w-3.5 mr-2" />
-              New Trip
-            </DropdownMenuItem>
+
+            {onCreateTrip && (
+              <>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  className="py-2.5 px-3 cursor-pointer text-primary"
+                  onClick={() => setModalOpen(true)}
+                >
+                  <Plus className="h-3.5 w-3.5 mr-2" />
+                  New Trip
+                </DropdownMenuItem>
+              </>
+            )}
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
 
-      <NewTripModal
-        open={modalOpen}
-        onOpenChange={setModalOpen}
-        onCreateTrip={(trip) => {
-          onCreateTrip(trip);
-          setModalOpen(false);
-        }}
-      />
+      {onCreateTrip && (
+        <NewTripModal
+          open={modalOpen}
+          onOpenChange={setModalOpen}
+          onCreateTrip={(trip) => {
+            onCreateTrip(trip);
+            setModalOpen(false);
+          }}
+        />
+      )}
 
       {/* Delete confirmation */}
-      <AlertDialog open={!!deleteTrip} onOpenChange={(open) => !open && setDeleteTrip(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete trip?</AlertDialogTitle>
-            <AlertDialogDescription>
-              {deleteTrip && (
-                <>
-                  This will permanently remove{" "}
-                  <span className="font-medium text-foreground">
-                    {deleteTrip.origin} → {deleteTrip.destination}
-                  </span>{" "}
-                  and all its selections. This action cannot be undone.
-                </>
-              )}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              onClick={() => {
-                if (deleteTrip) {
-                  onDeleteTrip(deleteTrip.id);
-                  setDeleteTrip(null);
-                }
-              }}
-            >
-              Delete Trip
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {onDeleteTrip && (
+        <AlertDialog open={!!deleteTripState} onOpenChange={(open) => !open && setDeleteTripState(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete trip?</AlertDialogTitle>
+              <AlertDialogDescription>
+                {deleteTripState && (
+                  <>
+                    This will permanently remove{" "}
+                    <span className="font-medium text-foreground">
+                      {deleteTripState.origin} → {deleteTripState.destination}
+                    </span>{" "}
+                    and all its selections. This action cannot be undone.
+                  </>
+                )}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                onClick={() => {
+                  if (deleteTripState) {
+                    onDeleteTrip(deleteTripState.id);
+                    setDeleteTripState(null);
+                  }
+                }}
+              >
+                Delete Trip
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      )}
     </>
   );
 }
