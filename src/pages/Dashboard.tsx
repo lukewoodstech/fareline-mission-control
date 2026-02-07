@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { Plane, ArrowLeft, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -23,6 +23,7 @@ import TripSwitcher from "@/components/dashboard/TripSwitcher";
 import SuggestedActivities from "@/components/dashboard/SuggestedActivities";
 import PlannedActivities from "@/components/dashboard/PlannedActivities";
 import ActivityPreferences from "@/components/dashboard/ActivityPreferences";
+import BudgetTracker from "@/components/dashboard/BudgetTracker";
 
 type DashboardTab = "flights" | "lodging" | "activities";
 
@@ -45,6 +46,23 @@ export default function Dashboard() {
   const lastAction = actions[0];
 
   const bothSelected = tripStore.selectedFlightId && tripStore.selectedLodgingId;
+
+  // Compute budget spend per category
+  const flightSpend = useMemo(() => {
+    if (!tripStore.selectedFlightId) return 0;
+    const flight = tripStore.flights.find((f) => f.id === tripStore.selectedFlightId);
+    return flight?.price ?? 0;
+  }, [tripStore.selectedFlightId, tripStore.flights]);
+
+  const lodgingSpend = useMemo(() => {
+    if (!tripStore.selectedLodgingId) return 0;
+    const lodge = tripStore.lodging.find((l) => l.id === tripStore.selectedLodgingId);
+    return lodge?.price ?? 0;
+  }, [tripStore.selectedLodgingId, tripStore.lodging]);
+
+  const activitySpend = useMemo(() => {
+    return activityStore.planned.reduce((sum, p) => sum + (p.activity.price ?? 0), 0);
+  }, [activityStore.planned]);
 
   const handleSendItinerary = () => {
     addAction({
@@ -129,8 +147,17 @@ export default function Dashboard() {
           {lastAction && <LastAgentAction action={lastAction} />}
         </div>
 
-        {/* Row 2: Impact Metrics */}
-        <ImpactMetrics metrics={metrics} />
+        {/* Row 2: Impact Metrics + Budget */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <ImpactMetrics metrics={metrics} />
+          <BudgetTracker
+            budget={tripStore.activeTrip.budget}
+            flightSpend={flightSpend}
+            lodgingSpend={lodgingSpend}
+            activitySpend={activitySpend}
+            onUpdateBudget={tripStore.updateBudget}
+          />
+        </div>
 
         {/* Activity Feed — cross-tab agent & user action log */}
         <LiveActivityFeed actions={actions} />
