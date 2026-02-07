@@ -9,7 +9,6 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { toast } from "sonner";
 import type { ActivityOption, ActivityCategory, ActivityRejectReason } from "@/types/travel";
 import type { ActivityDecision } from "@/hooks/useActivityStore";
 import ActivityThumbnail, { categoryConfig } from "./ActivityThumbnail";
@@ -20,7 +19,6 @@ import {
   Check,
   ThumbsDown,
   MapPin,
-  Copy,
 } from "lucide-react";
 
 const REJECT_REASONS: ActivityRejectReason[] = [
@@ -170,15 +168,6 @@ function ActivityCard({
   const mapsQuery = encodeURIComponent(activity.title + ", " + activity.address);
   const mapsUrl = `https://www.google.com/maps/search/${mapsQuery}`;
 
-  const handleCopyMap = () => {
-    navigator.clipboard.writeText(mapsUrl).then(() => {
-      toast.success("Map link copied!", {
-        description: "Paste in a new browser tab to open Google Maps.",
-        position: "top-center",
-      });
-    });
-  };
-
   return (
     <div className="rounded-lg p-3.5 bg-elevated/50 hover:bg-elevated/80 hover:shadow-sm transition-all duration-200 animate-fade-in-card">
       {/* Top row: thumbnail + info */}
@@ -259,20 +248,15 @@ function ActivityCard({
                 </TooltipContent>
               </Tooltip>
             ) : null}
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <button
-                  onClick={handleCopyMap}
-                  className="text-xs text-muted-foreground hover:text-primary hover:underline flex items-center gap-1 transition-colors cursor-pointer"
-                >
-                  <Copy className="h-3 w-3" />
-                  Copy Map Link
-                </button>
-              </TooltipTrigger>
-              <TooltipContent side="top" className="text-xs">
-                Copies Google Maps link to clipboard
-              </TooltipContent>
-            </Tooltip>
+            <a
+              href={mapsUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs text-muted-foreground hover:text-primary hover:underline flex items-center gap-1 transition-colors"
+            >
+              <MapPin className="h-3 w-3" />
+              Map
+            </a>
           </div>
           <div className="flex items-center gap-2">
             <Button
