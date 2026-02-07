@@ -226,29 +226,24 @@ export default function Dashboard() {
 
           {activeTab === "activities" && (
             <>
-              <div className="lg:col-span-8 space-y-4">
+              <div className="lg:col-span-6">
                 <SuggestedActivities
                   activities={activityStore.suggestions}
                   getDecision={activityStore.getActivityDecision}
                   onSelect={activityStore.selectActivity}
                   onReject={activityStore.rejectActivity}
                 />
-                {activityStore.planned.length > 0 && (
-                  <PlannedActivities
-                    planned={activityStore.planned}
-                    tripDepartDate={tripStore.activeTrip.departDate}
-                    onRemove={activityStore.removeFromPlan}
-                  />
-                )}
               </div>
-              <div className="lg:col-span-4 space-y-4">
+              <div className="lg:col-span-6 space-y-4">
+                <PlannedActivities
+                  planned={activityStore.planned}
+                  tripDepartDate={tripStore.activeTrip.departDate}
+                  onRemove={activityStore.removeFromPlan}
+                />
                 <ActivityControls
                   agentState={agentState}
                   onReoptimize={activityStore.reoptimizeActivities}
                   onSetAgentState={setAgentState}
-                />
-                <ActivityPreferences
-                  onReoptimize={activityStore.reoptimizeActivities}
                 />
               </div>
             </>
