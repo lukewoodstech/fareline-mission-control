@@ -79,10 +79,10 @@ export default function BestFlights({
             <div
               key={f.id}
               className={`rounded-lg p-3.5 transition-all duration-200 ${
-                isSelected
+              isSelected
                   ? "bg-primary/8 ring-1 ring-primary/30 shadow-md shadow-primary/5"
                   : isDeemphasized
-                  ? "bg-secondary/10 opacity-40 hover:opacity-60"
+                  ? "bg-secondary/20 opacity-70 hover:opacity-90 hover:bg-secondary/30"
                   : "bg-elevated/50 hover:bg-elevated/80 hover:shadow-sm"
               }`}
             >
