@@ -17,7 +17,7 @@ import {
 
 interface TripStore {
   trips: Trip[];
-  activeTrip: Trip;
+  activeTrip: Trip | null;
   flights: FlightOption[];
   lodging: LodgingOption[];
   decisions: OptionDecision[];
@@ -49,7 +49,7 @@ export function useTripStore(
   const replacementFlightIdx = useRef(0);
   const replacementLodgingIdx = useRef(0);
 
-  const activeTrip = trips.find((t) => t.id === activeTripId) ?? trips[0];
+  const activeTrip = trips.find((t) => t.id === activeTripId) ?? trips[0] ?? null;
 
   const selectedFlightId =
     decisions.find((d) => d.category === "flight" && d.status === "selected")?.optionId ?? null;
@@ -331,22 +331,15 @@ export function useTripStore(
 
   const deleteTrip = useCallback(
     (tripId: string) => {
-      setTrips((prev) => {
-        const remaining = prev.filter((t) => t.id !== tripId);
-        if (remaining.length === 0) return prev; // prevent deleting last trip
-        return remaining;
-      });
+      setTrips((prev) => prev.filter((t) => t.id !== tripId));
 
-      // If deleting the active trip, switch to the first remaining trip
+      // If deleting the active trip, switch to another or clear
       if (tripId === activeTripId) {
-        setTrips((prev) => {
-          const first = prev[0];
-          if (first) setActiveTripId(first.id);
-          return prev;
-        });
         setDecisions([]);
         setFlights(mockFlights);
         setLodging(mockLodging);
+        // activeTripId will resolve to null via the derived activeTrip
+        setActiveTripId("");
       }
 
       const action: AgentAction = {

@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
-import { Plane, ArrowLeft, MessageSquare } from "lucide-react";
+import { Plane, ArrowLeft, MessageSquare, MapPin, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
@@ -20,6 +20,7 @@ import FlightPreferences from "@/components/dashboard/FlightPreferences";
 import LodgingPreferences from "@/components/dashboard/LodgingPreferences";
 
 import TripSwitcher from "@/components/dashboard/TripSwitcher";
+import NewTripModal from "@/components/dashboard/NewTripModal";
 import SuggestedActivities from "@/components/dashboard/SuggestedActivities";
 import PlannedActivities from "@/components/dashboard/PlannedActivities";
 import ActivityPreferences from "@/components/dashboard/ActivityPreferences";
@@ -29,6 +30,7 @@ type DashboardTab = "flights" | "lodging" | "activities";
 
 export default function Dashboard() {
   const [activeTab, setActiveTab] = useState<DashboardTab>("flights");
+  const [blankModalOpen, setBlankModalOpen] = useState(false);
 
   const {
     isDemo,
@@ -44,8 +46,9 @@ export default function Dashboard() {
   const activityStore = useActivityStore(addAction, setAgentState);
 
   const lastAction = actions[0];
+  const hasTrips = tripStore.trips.length > 0 && tripStore.activeTrip !== null;
 
-  const bothSelected = tripStore.selectedFlightId && tripStore.selectedLodgingId;
+  const bothSelected = hasTrips && tripStore.selectedFlightId && tripStore.selectedLodgingId;
 
   // Compute budget spend per category
   const flightSpend = useMemo(() => {
@@ -115,170 +118,200 @@ export default function Dashboard() {
               onDeleteTrip={tripStore.deleteTrip}
             />
           </div>
-
-          
         </div>
       </header>
 
-      {/* Dashboard grid */}
-      <main className="container mx-auto px-4 py-6 space-y-6">
-        {/* Trip status banner — strengthened */}
-        {bothSelected && (
-          <div className="rounded-xl bg-success/5 ring-1 ring-success/20 px-4 py-3 flex items-center justify-between animate-slide-up shadow-sm">
-            <div className="flex items-center gap-2">
-              <Badge variant="success" className="text-xs">Ready to book</Badge>
-              <span className="text-sm text-muted-foreground">
-                TripMaster has locked in your best options
-              </span>
+      {/* Empty state when no trips */}
+      {!hasTrips ? (
+        <main className="container mx-auto px-4 py-6 flex items-center justify-center min-h-[calc(100vh-3.5rem)]">
+          <div className="text-center space-y-6 max-w-md mx-auto animate-fade-in">
+            <div className="mx-auto h-20 w-20 rounded-2xl bg-primary/10 flex items-center justify-center">
+              <MapPin className="h-10 w-10 text-primary" />
+            </div>
+            <div className="space-y-2">
+              <h2 className="text-2xl font-bold tracking-tight">No trips yet</h2>
+              <p className="text-muted-foreground leading-relaxed">
+                Create a trip to get started. Once your SMS agent kicks off a search,
+                you'll see flights, lodging, and activities populate right here in real time.
+              </p>
             </div>
             <Button
-              size="sm"
-              className="h-8 text-xs px-4 font-medium gap-1.5"
-              onClick={handleSendItinerary}
+              size="lg"
+              className="px-8 py-6 text-base rounded-xl"
+              onClick={() => setBlankModalOpen(true)}
             >
-              <MessageSquare className="h-3.5 w-3.5" />
-              Send itinerary via SMS
+              <Plus className="h-4 w-4 mr-2" />
+              Create Your First Trip
             </Button>
+            <NewTripModal
+              open={blankModalOpen}
+              onOpenChange={setBlankModalOpen}
+              onCreateTrip={(trip) => {
+                tripStore.createTrip(trip);
+                setBlankModalOpen(false);
+              }}
+            />
           </div>
-        )}
-
-        {/* Row 1: Agent Status + Last Action */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <AgentStatus
-            state={agentState}
-            trip={tripStore.activeTrip}
-          />
-          {lastAction && <LastAgentAction action={lastAction} />}
-        </div>
-
-        {/* Row 2: Impact Metrics + Budget */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <ImpactMetrics metrics={metrics} />
-          <BudgetTracker
-            budget={tripStore.activeTrip.budget}
-            flightSpend={flightSpend}
-            lodgingSpend={lodgingSpend}
-            activitySpend={activitySpend}
-            onUpdateBudget={tripStore.updateBudget}
-          />
-        </div>
-
-        {/* Activity Feed — cross-tab agent & user action log */}
-        <LiveActivityFeed actions={actions} />
-
-        {/* Subnav tabs */}
-        <nav className="flex items-center gap-1 border-b border-border/20 pb-0">
-          {tabs.map((tab) => (
-            <button
-              key={tab.key}
-              onClick={() => setActiveTab(tab.key)}
-              className={`relative px-4 py-2.5 text-sm font-medium transition-colors ${
-                activeTab === tab.key
-                  ? "text-primary"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              {tab.label}
-              {activeTab === tab.key && (
-                <span className="absolute bottom-0 left-2 right-2 h-0.5 bg-primary rounded-full" />
-              )}
-            </button>
-          ))}
-        </nav>
-
-        {/* Tab Content */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-          {activeTab === "flights" && (
-            <>
-              <div className="lg:col-span-8">
-                <BestFlights
-                  flights={tripStore.flights}
-                  selectedId={tripStore.selectedFlightId}
-                  getDecision={tripStore.getDecision}
-                  onSelect={(id) => tripStore.selectOption(id, "flight")}
-                  onReject={(id, reason) => tripStore.rejectOption(id, "flight", reason)}
-                  onToggleMonitor={tripStore.toggleMonitor}
-                  onUnselect={(id) => tripStore.unselectOption(id, "flight")}
-                />
+        </main>
+      ) : (
+        /* Dashboard grid */
+        <main className="container mx-auto px-4 py-6 space-y-6">
+          {/* Trip status banner */}
+          {bothSelected && (
+            <div className="rounded-xl bg-success/5 ring-1 ring-success/20 px-4 py-3 flex items-center justify-between animate-slide-up shadow-sm">
+              <div className="flex items-center gap-2">
+                <Badge variant="success" className="text-xs">Ready to book</Badge>
+                <span className="text-sm text-muted-foreground">
+                  TripMaster has locked in your best options
+                </span>
               </div>
-              <div className="lg:col-span-4 space-y-4">
-                <Controls
-                  key="flights"
-                  activeTab="flights"
-                  agentState={agentState}
-                  onReoptimize={tripStore.reoptimize}
-                  onSetAgentState={setAgentState}
-                  onAddAction={addAction}
-                />
-                <FlightPreferences
-                  initial={mockPreferences}
-                  onReoptimize={(strategy) => tripStore.reoptimize("flight", strategy)}
-                />
-              </div>
-            </>
+              <Button
+                size="sm"
+                className="h-8 text-xs px-4 font-medium gap-1.5"
+                onClick={handleSendItinerary}
+              >
+                <MessageSquare className="h-3.5 w-3.5" />
+                Send itinerary via SMS
+              </Button>
+            </div>
           )}
 
-          {activeTab === "lodging" && (
-            <>
-              <div className="lg:col-span-8">
-                <BestLodging
-                  lodging={tripStore.lodging}
-                  selectedId={tripStore.selectedLodgingId}
-                  getDecision={tripStore.getDecision}
-                  onSelect={(id) => tripStore.selectOption(id, "lodging")}
-                  onReject={(id, reason) => tripStore.rejectOption(id, "lodging", reason)}
-                  onToggleMonitor={tripStore.toggleMonitor}
-                  onUnselect={(id) => tripStore.unselectOption(id, "lodging")}
-                />
-              </div>
-              <div className="lg:col-span-4 space-y-4">
-                <Controls
-                  key="lodging"
-                  activeTab="lodging"
-                  agentState={agentState}
-                  onReoptimize={tripStore.reoptimize}
-                  onSetAgentState={setAgentState}
-                  onAddAction={addAction}
-                />
-                <LodgingPreferences
-                  initial={mockPreferences}
-                  destination={tripStore.activeTrip.destination}
-                  onNeighborhoodChange={(neighborhoods) => {
-                    if (neighborhoods.length > 0) {
-                      tripStore.reoptimize("lodging", `area priority: ${neighborhoods[0]}`);
-                    }
-                  }}
-                  onReoptimize={(strategy) => tripStore.reoptimize("lodging", strategy)}
-                />
-              </div>
-            </>
-          )}
+          {/* Row 1: Agent Status + Last Action */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <AgentStatus
+              state={agentState}
+              trip={tripStore.activeTrip!}
+            />
+            {lastAction && <LastAgentAction action={lastAction} />}
+          </div>
 
-          {activeTab === "activities" && (
-            <>
-              <div className="lg:col-span-8">
-                <SuggestedActivities
-                  activities={activityStore.suggestions}
-                  getDecision={activityStore.getActivityDecision}
-                  onSelect={activityStore.selectActivity}
-                  onReject={activityStore.rejectActivity}
-                />
-              </div>
-              <div className="lg:col-span-4 space-y-4">
-                <PlannedActivities
-                  planned={activityStore.planned}
-                  onRemove={activityStore.removeFromPlan}
-                />
-                <ActivityPreferences
-                  onReoptimize={activityStore.reoptimizeActivities}
-                />
-              </div>
-            </>
-          )}
-        </div>
+          {/* Row 2: Impact Metrics + Budget */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <ImpactMetrics metrics={metrics} />
+            <BudgetTracker
+              budget={tripStore.activeTrip!.budget}
+              flightSpend={flightSpend}
+              lodgingSpend={lodgingSpend}
+              activitySpend={activitySpend}
+              onUpdateBudget={tripStore.updateBudget}
+            />
+          </div>
 
-        {/* end tab content */}
-      </main>
+          {/* Activity Feed */}
+          <LiveActivityFeed actions={actions} />
+
+          {/* Subnav tabs */}
+          <nav className="flex items-center gap-1 border-b border-border/20 pb-0">
+            {tabs.map((tab) => (
+              <button
+                key={tab.key}
+                onClick={() => setActiveTab(tab.key)}
+                className={`relative px-4 py-2.5 text-sm font-medium transition-colors ${
+                  activeTab === tab.key
+                    ? "text-primary"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {tab.label}
+                {activeTab === tab.key && (
+                  <span className="absolute bottom-0 left-2 right-2 h-0.5 bg-primary rounded-full" />
+                )}
+              </button>
+            ))}
+          </nav>
+
+          {/* Tab Content */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+            {activeTab === "flights" && (
+              <>
+                <div className="lg:col-span-8">
+                  <BestFlights
+                    flights={tripStore.flights}
+                    selectedId={tripStore.selectedFlightId}
+                    getDecision={tripStore.getDecision}
+                    onSelect={(id) => tripStore.selectOption(id, "flight")}
+                    onReject={(id, reason) => tripStore.rejectOption(id, "flight", reason)}
+                    onToggleMonitor={tripStore.toggleMonitor}
+                    onUnselect={(id) => tripStore.unselectOption(id, "flight")}
+                  />
+                </div>
+                <div className="lg:col-span-4 space-y-4">
+                  <Controls
+                    key="flights"
+                    activeTab="flights"
+                    agentState={agentState}
+                    onReoptimize={tripStore.reoptimize}
+                    onSetAgentState={setAgentState}
+                    onAddAction={addAction}
+                  />
+                  <FlightPreferences
+                    initial={mockPreferences}
+                    onReoptimize={(strategy) => tripStore.reoptimize("flight", strategy)}
+                  />
+                </div>
+              </>
+            )}
+
+            {activeTab === "lodging" && (
+              <>
+                <div className="lg:col-span-8">
+                  <BestLodging
+                    lodging={tripStore.lodging}
+                    selectedId={tripStore.selectedLodgingId}
+                    getDecision={tripStore.getDecision}
+                    onSelect={(id) => tripStore.selectOption(id, "lodging")}
+                    onReject={(id, reason) => tripStore.rejectOption(id, "lodging", reason)}
+                    onToggleMonitor={tripStore.toggleMonitor}
+                    onUnselect={(id) => tripStore.unselectOption(id, "lodging")}
+                  />
+                </div>
+                <div className="lg:col-span-4 space-y-4">
+                  <Controls
+                    key="lodging"
+                    activeTab="lodging"
+                    agentState={agentState}
+                    onReoptimize={tripStore.reoptimize}
+                    onSetAgentState={setAgentState}
+                    onAddAction={addAction}
+                  />
+                  <LodgingPreferences
+                    initial={mockPreferences}
+                    destination={tripStore.activeTrip!.destination}
+                    onNeighborhoodChange={(neighborhoods) => {
+                      if (neighborhoods.length > 0) {
+                        tripStore.reoptimize("lodging", `area priority: ${neighborhoods[0]}`);
+                      }
+                    }}
+                    onReoptimize={(strategy) => tripStore.reoptimize("lodging", strategy)}
+                  />
+                </div>
+              </>
+            )}
+
+            {activeTab === "activities" && (
+              <>
+                <div className="lg:col-span-8">
+                  <SuggestedActivities
+                    activities={activityStore.suggestions}
+                    getDecision={activityStore.getActivityDecision}
+                    onSelect={activityStore.selectActivity}
+                    onReject={activityStore.rejectActivity}
+                  />
+                </div>
+                <div className="lg:col-span-4 space-y-4">
+                  <PlannedActivities
+                    planned={activityStore.planned}
+                    onRemove={activityStore.removeFromPlan}
+                  />
+                  <ActivityPreferences
+                    onReoptimize={activityStore.reoptimizeActivities}
+                  />
+                </div>
+              </>
+            )}
+          </div>
+        </main>
+      )}
     </div>
   );
 }

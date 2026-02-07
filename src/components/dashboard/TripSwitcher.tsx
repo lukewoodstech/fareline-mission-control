@@ -27,7 +27,7 @@ function formatDate(d: string) {
 
 interface TripSwitcherProps {
   trips: Trip[];
-  activeTrip: Trip;
+  activeTrip: Trip | null;
   onSwitchTrip: (tripId: string) => void;
   onCreateTrip: (trip: Omit<Trip, "id" | "status">) => void;
   onDeleteTrip: (tripId: string) => void;
@@ -49,16 +49,23 @@ export default function TripSwitcher({
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="sm" className="gap-1.5 font-mono text-xs h-8">
               <MapPin className="h-3 w-3 text-primary" />
-              {activeTrip.origin} → {activeTrip.destination}
+              {activeTrip
+                ? `${activeTrip.origin} → ${activeTrip.destination}`
+                : "No trips"}
               <ChevronDown className="h-3 w-3 text-muted-foreground" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start" className="w-64 bg-card z-50">
+            {trips.length === 0 && (
+              <div className="px-3 py-4 text-center">
+                <p className="text-sm text-muted-foreground">No trips yet</p>
+              </div>
+            )}
             {trips.map((trip) => (
               <DropdownMenuItem
                 key={trip.id}
                 className={`flex flex-col items-start gap-1 py-2.5 px-3 cursor-pointer ${
-                  trip.id === activeTrip.id ? "bg-secondary/50" : ""
+                  activeTrip && trip.id === activeTrip.id ? "bg-secondary/50" : ""
                 }`}
                 onClick={() => onSwitchTrip(trip.id)}
               >
@@ -70,17 +77,15 @@ export default function TripSwitcher({
                     <Badge variant={statusVariant[trip.status]} className="text-[10px] py-0 px-1.5">
                       {trip.status}
                     </Badge>
-                    {trips.length > 1 && (
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onDeleteTrip(trip.id);
-                        }}
-                        className="h-5 w-5 rounded flex items-center justify-center text-muted-foreground/50 hover:text-destructive hover:bg-destructive/10 transition-colors"
-                      >
-                        <Trash2 className="h-3 w-3" />
-                      </button>
-                    )}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onDeleteTrip(trip.id);
+                      }}
+                      className="h-5 w-5 rounded flex items-center justify-center text-muted-foreground/50 hover:text-destructive hover:bg-destructive/10 transition-colors"
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </button>
                   </div>
                 </div>
                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
