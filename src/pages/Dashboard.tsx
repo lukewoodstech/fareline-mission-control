@@ -61,7 +61,10 @@ export default function Dashboard() {
   }, [tripStore.selectedLodgingId, tripStore.lodging]);
 
   const activitySpend = useMemo(() => {
-    return 0; // Activity prices are descriptive strings (e.g. "$$", "$100+"), not numeric
+    return activityStore.planned.reduce(
+      (sum, p) => sum + (p.activity.estimatedCost ?? 0),
+      0,
+    );
   }, [activityStore.planned]);
 
   const handleSendItinerary = () => {
