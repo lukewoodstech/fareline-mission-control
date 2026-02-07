@@ -9,7 +9,8 @@ import {
   Settings2,
   Eye,
   MessageSquare,
-  List,
+  Activity,
+  ThumbsDown,
 } from "lucide-react";
 
 const typeIcons: Record<AgentAction["type"], React.ElementType> = {
@@ -20,7 +21,7 @@ const typeIcons: Record<AgentAction["type"], React.ElementType> = {
   monitor: Eye,
   sms: MessageSquare,
   trip: Search,
-  reject: BellRing,
+  reject: ThumbsDown,
 };
 
 const typeLabels: Record<AgentAction["type"], string> = {
@@ -32,6 +33,17 @@ const typeLabels: Record<AgentAction["type"], string> = {
   sms: "SMS Sent",
   trip: "Trip",
   reject: "Rejected",
+};
+
+const typeBadgeVariant: Record<AgentAction["type"], "muted" | "accent" | "destructive"> = {
+  search: "muted",
+  compare: "muted",
+  alert: "accent",
+  optimize: "muted",
+  monitor: "muted",
+  sms: "accent",
+  trip: "muted",
+  reject: "destructive",
 };
 
 function formatTime(iso: string) {
@@ -49,30 +61,43 @@ export default function LiveActivityFeed({ actions }: LiveActivityFeedProps) {
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-            <List className="h-4 w-4" />
+            <Activity className="h-4 w-4" />
             Live Activity Feed
           </CardTitle>
-          <span className="text-xs text-muted-foreground font-mono">{actions.length} events</span>
+          <div className="flex items-center gap-2">
+            <span className="h-2 w-2 rounded-full bg-success animate-pulse" />
+            <span className="text-xs text-muted-foreground font-mono">{actions.length} events</span>
+          </div>
         </div>
       </CardHeader>
       <CardContent>
-        <ScrollArea className="h-[280px] pr-4">
-          <div className="space-y-1">
+        <ScrollArea className="h-[240px] pr-4">
+          <div className="space-y-0.5">
             {actions.map((action, idx) => {
               const Icon = typeIcons[action.type];
               return (
                 <div
                   key={action.id}
-                  className={`flex items-start gap-3 py-2.5 px-3 rounded-lg transition-colors hover:bg-secondary/50 ${idx === 0 ? "animate-slide-up bg-secondary/30" : ""}`}
+                  className={`flex items-start gap-3 py-2 px-3 rounded-lg transition-all hover:bg-secondary/50 ${
+                    idx === 0 ? "animate-slide-up bg-secondary/30" : ""
+                  }`}
                 >
-                  <div className="mt-0.5 h-7 w-7 rounded-md bg-secondary flex items-center justify-center shrink-0">
-                    <Icon className="h-3.5 w-3.5 text-muted-foreground" />
+                  <div className={`mt-0.5 h-6 w-6 rounded-md flex items-center justify-center shrink-0 ${
+                    action.type === "reject" ? "bg-destructive/15" :
+                    action.type === "alert" || action.type === "sms" ? "bg-accent/15" :
+                    "bg-secondary"
+                  }`}>
+                    <Icon className={`h-3 w-3 ${
+                      action.type === "reject" ? "text-destructive" :
+                      action.type === "alert" || action.type === "sms" ? "text-accent" :
+                      "text-muted-foreground"
+                    }`} />
                   </div>
 
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-0.5">
-                      <span className="text-xs font-mono text-muted-foreground">{formatTime(action.timestamp)}</span>
-                      <Badge variant="muted" className="text-[10px] py-0 px-1.5">
+                      <span className="text-[11px] font-mono text-muted-foreground">{formatTime(action.timestamp)}</span>
+                      <Badge variant={typeBadgeVariant[action.type] ?? "muted"} className="text-[10px] py-0 px-1.5">
                         {typeLabels[action.type]}
                       </Badge>
                       {action.smsSent && (
@@ -82,7 +107,7 @@ export default function LiveActivityFeed({ actions }: LiveActivityFeedProps) {
                         </Badge>
                       )}
                     </div>
-                    <p className="text-sm font-medium leading-snug">{action.summary}</p>
+                    <p className="text-sm leading-snug">{action.summary}</p>
                   </div>
                 </div>
               );

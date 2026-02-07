@@ -8,12 +8,6 @@ interface FlightPreferencesProps {
   initial: Preferences;
 }
 
-const flightPrefs: { key: keyof Preferences; label: string }[] = [
-  { key: "avoidRedEyes", label: "Avoid red-eyes" },
-  { key: "preferNonstop", label: "Prefer nonstop" },
-  { key: "preferWindow", label: "Window seat" },
-];
-
 export default function FlightPreferences({ initial }: FlightPreferencesProps) {
   const [prefs, setPrefs] = useState(initial);
 
@@ -29,18 +23,41 @@ export default function FlightPreferences({ initial }: FlightPreferencesProps) {
           Flight Preferences
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-3">
-        {flightPrefs.map((item) => (
-          <div key={item.key} className="flex items-center justify-between">
-            <span className="text-sm">{item.label}</span>
+      <CardContent className="space-y-4">
+        {/* Timing */}
+        <div className="space-y-2.5">
+          <p className="text-[11px] font-mono uppercase text-muted-foreground/60 tracking-wider">Timing</p>
+          <div className="flex items-center justify-between">
+            <span className="text-sm">Avoid red-eyes</span>
             <Switch
-              checked={prefs[item.key] as boolean}
-              onCheckedChange={() => togglePref(item.key)}
+              checked={prefs.avoidRedEyes as boolean}
+              onCheckedChange={() => togglePref("avoidRedEyes")}
             />
           </div>
-        ))}
+        </div>
 
-        <div className="pt-2 border-t border-border/30 space-y-2">
+        {/* Comfort */}
+        <div className="space-y-2.5">
+          <p className="text-[11px] font-mono uppercase text-muted-foreground/60 tracking-wider">Comfort</p>
+          <div className="flex items-center justify-between">
+            <span className="text-sm">Prefer nonstop</span>
+            <Switch
+              checked={prefs.preferNonstop as boolean}
+              onCheckedChange={() => togglePref("preferNonstop")}
+            />
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-sm">Window seat</span>
+            <Switch
+              checked={prefs.preferWindow as boolean}
+              onCheckedChange={() => togglePref("preferWindow")}
+            />
+          </div>
+        </div>
+
+        {/* Constraints */}
+        <div className="space-y-2.5">
+          <p className="text-[11px] font-mono uppercase text-muted-foreground/60 tracking-wider">Constraints</p>
           <div className="flex items-center justify-between">
             <span className="text-sm">Max stops</span>
             <span className="text-sm font-mono text-primary">{prefs.maxStops}</span>
