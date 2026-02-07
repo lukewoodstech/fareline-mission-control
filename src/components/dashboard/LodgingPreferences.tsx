@@ -1,10 +1,9 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import type { Preferences } from "@/types/travel";
-import { useState } from "react";
-import { Building2, MapPin, X } from "lucide-react";
+import { useState, useCallback } from "react";
+import { Building2, MapPin, X, ChevronUp, ChevronDown, GripVertical } from "lucide-react";
 
 const NEIGHBORHOOD_SUGGESTIONS: Record<string, string[]> = {
   default: ["Downtown", "Old Town", "Midtown", "Waterfront", "Arts District", "University Area"],
@@ -16,9 +15,10 @@ const NEIGHBORHOOD_SUGGESTIONS: Record<string, string[]> = {
 interface LodgingPreferencesProps {
   initial: Preferences;
   destination?: string;
+  onNeighborhoodChange?: (neighborhoods: string[]) => void;
 }
 
-export default function LodgingPreferences({ initial, destination }: LodgingPreferencesProps) {
+export default function LodgingPreferences({ initial, destination, onNeighborhoodChange }: LodgingPreferencesProps) {
   const [prefs, setPrefs] = useState(initial);
   const [neighborhoodInput, setNeighborhoodInput] = useState("");
   const [selectedNeighborhoods, setSelectedNeighborhoods] = useState<string[]>([]);
@@ -31,16 +31,38 @@ export default function LodgingPreferences({ initial, destination }: LodgingPref
       s.toLowerCase().includes(neighborhoodInput.toLowerCase()),
   );
 
+  const updateNeighborhoods = useCallback(
+    (next: string[]) => {
+      setSelectedNeighborhoods(next);
+      onNeighborhoodChange?.(next);
+    },
+    [onNeighborhoodChange],
+  );
+
   const addNeighborhood = (name: string) => {
     if (!selectedNeighborhoods.includes(name)) {
-      setSelectedNeighborhoods((prev) => [...prev, name]);
+      updateNeighborhoods([...selectedNeighborhoods, name]);
     }
     setNeighborhoodInput("");
     setShowSuggestions(false);
   };
 
   const removeNeighborhood = (name: string) => {
-    setSelectedNeighborhoods((prev) => prev.filter((n) => n !== name));
+    updateNeighborhoods(selectedNeighborhoods.filter((n) => n !== name));
+  };
+
+  const moveUp = (index: number) => {
+    if (index === 0) return;
+    const next = [...selectedNeighborhoods];
+    [next[index - 1], next[index]] = [next[index], next[index - 1]];
+    updateNeighborhoods(next);
+  };
+
+  const moveDown = (index: number) => {
+    if (index === selectedNeighborhoods.length - 1) return;
+    const next = [...selectedNeighborhoods];
+    [next[index], next[index + 1]] = [next[index + 1], next[index]];
+    updateNeighborhoods(next);
   };
 
   return (
@@ -54,7 +76,7 @@ export default function LodgingPreferences({ initial, destination }: LodgingPref
       <CardContent className="space-y-4">
         {/* Location */}
         <div className="space-y-2.5">
-          <p className="text-[11px] font-mono uppercase text-muted-foreground/60 tracking-wider">Location</p>
+          <p className="text-[11px] font-mono uppercase text-muted-foreground/60 tracking-wider">Location Priority</p>
           <div className="relative">
             <MapPin className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
             <Input
@@ -92,23 +114,50 @@ export default function LodgingPreferences({ initial, destination }: LodgingPref
               </div>
             )}
           </div>
+
+          {/* Ranked list */}
           {selectedNeighborhoods.length > 0 && (
-            <div className="flex flex-wrap gap-1.5">
-              {selectedNeighborhoods.map((n) => (
-                <Badge key={n} variant="secondary" className="text-xs gap-1 pr-1">
-                  {n}
+            <div className="space-y-1">
+              {selectedNeighborhoods.map((n, i) => (
+                <div
+                  key={n}
+                  className="flex items-center gap-1.5 rounded-md bg-secondary/40 px-2 py-1.5 group animate-fade-in"
+                >
+                  <GripVertical className="h-3 w-3 text-muted-foreground/40 shrink-0" />
+                  <span className="text-[10px] font-mono text-muted-foreground w-4 shrink-0">
+                    #{i + 1}
+                  </span>
+                  <span className="text-sm flex-1 truncate">{n}</span>
+                  <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button
+                      onClick={() => moveUp(i)}
+                      disabled={i === 0}
+                      className="p-0.5 rounded hover:bg-secondary disabled:opacity-30 transition-colors cursor-pointer disabled:cursor-default"
+                    >
+                      <ChevronUp className="h-3 w-3" />
+                    </button>
+                    <button
+                      onClick={() => moveDown(i)}
+                      disabled={i === selectedNeighborhoods.length - 1}
+                      className="p-0.5 rounded hover:bg-secondary disabled:opacity-30 transition-colors cursor-pointer disabled:cursor-default"
+                    >
+                      <ChevronDown className="h-3 w-3" />
+                    </button>
+                  </div>
                   <button
                     onClick={() => removeNeighborhood(n)}
-                    className="ml-0.5 rounded-full hover:bg-destructive/20 hover:text-destructive p-0.5 transition-colors cursor-pointer"
+                    className="p-0.5 rounded hover:bg-destructive/20 hover:text-destructive transition-colors cursor-pointer"
                   >
-                    <X className="h-2.5 w-2.5" />
+                    <X className="h-3 w-3" />
                   </button>
-                </Badge>
+                </div>
               ))}
             </div>
           )}
           <p className="text-[10px] text-muted-foreground/60">
-            TripMaster will prioritize lodging in these areas
+            {selectedNeighborhoods.length > 0
+              ? "TripMaster will re-rank lodging by your area priority"
+              : "Add areas to steer where TripMaster searches"}
           </p>
         </div>
 
