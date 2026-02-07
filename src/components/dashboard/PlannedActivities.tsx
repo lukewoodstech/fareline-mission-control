@@ -85,23 +85,39 @@ export default function PlannedActivities({
               key={p.activityId}
               className="rounded-lg bg-primary/5 ring-1 ring-primary/15 p-2.5 animate-fade-in"
             >
-              <div className="flex items-center justify-between mb-1">
-                <div className="flex items-center gap-2 min-w-0">
-                  <CatIcon className={`h-3.5 w-3.5 shrink-0 ${catColor}`} />
-                  <span className="text-sm font-medium truncate">{p.activity.title}</span>
-                </div>
-                {p.activity.price && (
-                  <span className="text-xs font-mono text-primary shrink-0 ml-2">
-                    {p.activity.price}
-                  </span>
+              <div className="flex gap-2.5 mb-1">
+                {p.activity.thumbnail ? (
+                  <img
+                    src={p.activity.thumbnail}
+                    alt={p.activity.title}
+                    referrerPolicy="no-referrer"
+                    className="h-12 w-16 rounded-md object-cover shrink-0 bg-secondary"
+                  />
+                ) : (
+                  <div className={`h-12 w-16 rounded-md bg-primary/10 flex items-center justify-center shrink-0`}>
+                    <CatIcon className={`h-4 w-4 ${catColor}`} />
+                  </div>
                 )}
-              </div>
-              <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
-                <span>{p.activity.type}</span>
-                <span className="flex items-center gap-0.5">
-                  <Star className="h-3 w-3 text-amber-400 fill-amber-400" />
-                  {p.activity.rating}
-                </span>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      <CatIcon className={`h-3 w-3 shrink-0 ${catColor}`} />
+                      <span className="text-sm font-medium truncate">{p.activity.title}</span>
+                    </div>
+                    {p.activity.price && (
+                      <span className="text-xs font-mono text-primary shrink-0 ml-2">
+                        {p.activity.price}
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <span>{p.activity.type}</span>
+                    <span className="flex items-center gap-0.5">
+                      <Star className="h-3 w-3 text-amber-400 fill-amber-400" />
+                      {p.activity.rating}
+                    </span>
+                  </div>
+                </div>
               </div>
               <div className="flex items-center justify-between mt-2 pt-1.5 border-t border-border/10">
                 <div className="flex items-center gap-2">

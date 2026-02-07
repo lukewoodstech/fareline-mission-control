@@ -159,6 +159,8 @@ export const replacementActivities: ActivityOption[] = [
     address: "820 Olowalu Village Rd, Lahaina, HI 96761",
     description: "Beloved roadside stop for savory pot pies, fresh sandwiches, and legendary homemade dessert pies.",
     website: "https://www.leodas.com/",
+    thumbnail: "https://lh3.googleusercontent.com/p/AF1QipPDqzMIbLswAaKlIJVxk6AOOayM7KDdrk7bXRXx=w122-h92-k-no",
+    gps_coordinates: { latitude: 20.8103, longitude: -156.6003 },
     tag: "Local Gem",
   },
   {
@@ -169,6 +171,8 @@ export const replacementActivities: ActivityOption[] = [
     rating: 4.9,
     address: "Haleakala National Park, Hana, HI 96713",
     description: "Stunning 4-mile roundtrip trail through a bamboo forest to the 400-ft Waimoku Falls.",
+    thumbnail: "https://lh3.googleusercontent.com/p/AF1QipN2PFQ5cJ1t5mFwXv8JG0XMHxRZEBqWk4hSVGVR=w122-h92-k-no",
+    gps_coordinates: { latitude: 20.6602, longitude: -156.0449 },
     tag: "Must Do",
   },
   {
@@ -179,6 +183,8 @@ export const replacementActivities: ActivityOption[] = [
     rating: 4.8,
     address: "Haleakala National Park, HI 96768",
     description: "Watch sunrise from 10,023 feet above sea level at the summit of Haleakala volcano.",
+    thumbnail: "https://lh3.googleusercontent.com/p/AF1QipMsGk2k2g4oKxLGaJk-1G2kYnSBLxj9Dbd6KxSY=w122-h92-k-no",
+    gps_coordinates: { latitude: 20.7097, longitude: -156.1535 },
     tag: "Must Do",
   },
   {
@@ -191,6 +197,8 @@ export const replacementActivities: ActivityOption[] = [
     address: "605 Lipoa Pkwy, Kihei, HI 96753",
     description: "Hawaii's largest craft brewery with a full restaurant, craft beers on tap, and live music nights.",
     website: "https://mauibrewingco.com/",
+    thumbnail: "https://lh3.googleusercontent.com/p/AF1QipPDXm0bRO2cupJD_cS3rndMC4KPSTVJi8pSmSaO=w122-h92-k-no",
+    gps_coordinates: { latitude: 20.7534, longitude: -156.4490 },
   },
   {
     id: "act-rep-5",
@@ -200,6 +208,8 @@ export const replacementActivities: ActivityOption[] = [
     rating: 4.7,
     address: "Maalaea Harbor, Wailuku, HI 96793",
     description: "Half-day catamaran trip to the crescent-shaped Molokini crater for world-class snorkeling.",
+    thumbnail: "https://lh3.googleusercontent.com/p/AF1QipMSPSe0Wx5PiqkoTRb_f-SXQRG3Jo4gdXVPWwqE=w122-h92-k-no",
+    gps_coordinates: { latitude: 20.7926, longitude: -156.5122 },
     tag: "Top Pick",
   },
 ];
