@@ -9,7 +9,7 @@
  *   Metrics → computed from available API data
  *   Activities → handled separately by useActivityStore (mock)
  */
-import { useState, useCallback, useMemo, useEffect } from "react";
+import { useState, useCallback, useMemo, useEffect, useRef } from "react";
 import {
   useTripQuery,
   useReasoningQuery,
@@ -19,6 +19,12 @@ import {
   useApproveTrip,
   useModifyTrip,
 } from "./useApi";
+import {
+  mockFlights,
+  mockLodging,
+  replacementFlights,
+  replacementLodging,
+} from "@/data/mockData";
 import type {
   AgentAction,
   AgentState,
@@ -47,17 +53,38 @@ export function useLiveDashboard(enabled = true) {
   const [decisions, setDecisions] = useState<OptionDecision[]>([]);
   const [budget, setBudget] = useState(0);
 
+  // ── Local trip management ──
+  const [localTrips, setLocalTrips] = useState<Trip[]>([]);
+  const [activeTripId, setActiveTripId] = useState<string | null>(null);
+  const [flights, setFlights] = useState<FlightOption[]>(mockFlights);
+  const [lodging, setLodging] = useState<LodgingOption[]>(mockLodging);
+  const replacementFlightIdx = useRef(0);
+  const replacementLodgingIdx = useRef(0);
+
   // ── API-derived data ──
   const apiTrip = tripQuery.data?.trip ?? null;
   const apiAgentState = tripQuery.data?.agentState ?? "Idle";
-  const flights: FlightOption[] = tripQuery.data?.flights ?? [];
-  const lodging: LodgingOption[] = tripQuery.data?.lodging ?? [];
+  const apiFlights: FlightOption[] = tripQuery.data?.flights ?? [];
+  const apiLodging: LodgingOption[] = tripQuery.data?.lodging ?? [];
 
-  // Merge local budget into the trip object so components can read trip.budget
+  // Merge API trip into local trips list (avoid duplicates)
+  const trips: Trip[] = useMemo(() => {
+    const combined = [...localTrips];
+    if (apiTrip && !combined.some((t) => t.id === apiTrip.id)) {
+      combined.unshift(apiTrip);
+    }
+    return combined;
+  }, [localTrips, apiTrip]);
+
+  // Resolve active trip: use activeTripId if set, otherwise fall back to API trip
   const trip: Trip | null = useMemo(() => {
-    if (!apiTrip) return null;
-    return { ...apiTrip, budget };
-  }, [apiTrip, budget]);
+    if (activeTripId) {
+      const found = trips.find((t) => t.id === activeTripId);
+      if (found) return { ...found, budget };
+    }
+    if (apiTrip) return { ...apiTrip, budget };
+    return trips.length > 0 ? { ...trips[0], budget } : null;
+  }, [activeTripId, trips, apiTrip, budget]);
 
   // ── Agent state: local override resets when API state changes ──
   const agentState: AgentState = localAgentState ?? apiAgentState;
@@ -184,6 +211,24 @@ export function useLiveDashboard(enabled = true) {
 
   const reoptimize = useCallback(
     (category: "flight" | "lodging", strategy: string) => {
+      const currentIds =
+        category === "flight"
+          ? flights.filter((f) => f.id !== selectedFlightId).map((f) => f.id)
+          : lodging.filter((l) => l.id !== selectedLodgingId).map((l) => l.id);
+
+      setDecisions((prev) => {
+        const filtered = prev.filter((d) => !currentIds.includes(d.optionId));
+        return [
+          ...filtered,
+          ...currentIds.map((id) => ({
+            optionId: id,
+            category,
+            status: "replacing" as const,
+            timestamp: new Date().toISOString(),
+          })),
+        ];
+      });
+
       setLocalAgentState(
         category === "flight" ? "Re-optimizing (Flights)" : "Re-optimizing (Lodging)",
       );
@@ -192,15 +237,117 @@ export function useLiveDashboard(enabled = true) {
         timestamp: new Date().toISOString(),
         type: "optimize",
         summary: `Re-optimizing ${category}s — ${strategy}`,
-        detail: `Requesting the agent to find better ${category} options.`,
+        detail: `TripMaster is replacing current ${category} options based on the "${strategy}" strategy.`,
         smsSent: false,
       });
+
       modify.mutate();
+
+      setTimeout(() => {
+        if (category === "flight") {
+          setFlights((prev) =>
+            prev.map((f) => {
+              if (f.id === selectedFlightId) return f;
+              const idx = replacementFlightIdx.current % replacementFlights.length;
+              const replacement = { ...replacementFlights[idx], id: `fl-rep-${Date.now()}-${idx}` };
+              replacementFlightIdx.current += 1;
+              return replacement;
+            }),
+          );
+        } else {
+          setLodging((prev) =>
+            prev.map((l) => {
+              if (l.id === selectedLodgingId) return l;
+              const idx = replacementLodgingIdx.current % replacementLodging.length;
+              const replacement = { ...replacementLodging[idx], id: `lg-rep-${Date.now()}-${idx}` };
+              replacementLodgingIdx.current += 1;
+              return replacement;
+            }),
+          );
+        }
+
+        setDecisions((prev) => prev.filter((d) => !currentIds.includes(d.optionId)));
+        setLocalAgentState(null);
+
+        addAction({
+          id: `act-reopt-done-${Date.now()}`,
+          timestamp: new Date().toISOString(),
+          type: "optimize",
+          summary: `Found new ${category} options — ${strategy}`,
+          detail: `Replaced ${currentIds.length} options with better matches.`,
+          smsSent: false,
+        });
+      }, 1800);
     },
-    [addAction, modify],
+    [flights, lodging, selectedFlightId, selectedLodgingId, addAction, modify],
   );
 
   const updateBudget = useCallback((n: number) => setBudget(n), []);
+
+  // ── Trip management ──
+  const switchTrip = useCallback(
+    (tripId: string) => {
+      setActiveTripId(tripId);
+      setDecisions([]);
+      setFlights(mockFlights);
+      setLodging(mockLodging);
+    },
+    [],
+  );
+
+  const createTrip = useCallback(
+    (tripData: Omit<Trip, "id" | "status">) => {
+      const newTrip: Trip = {
+        ...tripData,
+        id: `trip-${Date.now()}`,
+        status: "Planning",
+      };
+      setLocalTrips((prev) => [...prev, newTrip]);
+      setActiveTripId(newTrip.id);
+      setDecisions([]);
+      setFlights(mockFlights);
+      setLodging(mockLodging);
+
+      addAction({
+        id: `act-trip-${Date.now()}`,
+        timestamp: new Date().toISOString(),
+        type: "trip",
+        summary: `Trip created: ${tripData.origin} → ${tripData.destination}`,
+        detail: `New trip for ${tripData.travelers} traveler(s), ${tripData.departDate} to ${tripData.returnDate}, budget $${tripData.budget}.`,
+        smsSent: false,
+      });
+
+      setLocalAgentState("Initializing");
+      setTimeout(() => setLocalAgentState("Searching Flights"), 2000);
+      setTimeout(() => setLocalAgentState(null), 5000);
+    },
+    [addAction],
+  );
+
+  const deleteTrip = useCallback(
+    (tripId: string) => {
+      setLocalTrips((prev) => {
+        const remaining = prev.filter((t) => t.id !== tripId);
+        if (tripId === activeTripId && remaining.length > 0) {
+          setActiveTripId(remaining[0].id);
+        } else if (tripId === activeTripId) {
+          setActiveTripId(null);
+        }
+        return remaining;
+      });
+      setDecisions([]);
+
+      addAction({
+        id: `act-delete-${Date.now()}`,
+        timestamp: new Date().toISOString(),
+        type: "trip",
+        summary: "Trip deleted",
+        detail: "TripMaster removed the trip and its associated selections.",
+        smsSent: false,
+      });
+    },
+    [activeTripId, addAction],
+  );
 
   // ── Loading / error ──
   const isLoading = tripQuery.isLoading;
@@ -211,14 +358,20 @@ export function useLiveDashboard(enabled = true) {
     null;
 
   return {
-    // API-sourced
+    // Data
     trip,
+    trips,
     agentState,
     flights,
     lodging,
     actions,
     isLoading,
     error,
+
+    // Trip management
+    switchTrip,
+    createTrip,
+    deleteTrip,
 
     // Client-side decisions
     decisions,
