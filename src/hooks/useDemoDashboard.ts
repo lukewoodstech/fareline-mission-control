@@ -15,7 +15,7 @@ import type {
   Trip,
 } from "@/types/travel";
 import {
-  mockTrip,
+  mockTrips,
   mockFlights,
   mockLodging,
   mockMetrics,
@@ -25,6 +25,10 @@ import {
 } from "@/data/mockData";
 
 export function useDemoDashboard() {
+  // ── Trip management state ──
+  const [trips, setTrips] = useState<Trip[]>(mockTrips);
+  const [activeTripId, setActiveTripId] = useState(mockTrips[0].id);
+
   // ── Demo simulation state ──
   const [agentState, setAgentStateRaw] = useState<AgentState>("Monitoring");
   const [actions, setActions] = useState<AgentAction[]>(initialActions);
@@ -35,10 +39,17 @@ export function useDemoDashboard() {
 
   // ── Client-side overlay state ──
   const [decisions, setDecisions] = useState<OptionDecision[]>([]);
-  const [budget, setBudget] = useState(mockTrip.budget);
 
-  // ── Static mock data ──
-  const trip: Trip = useMemo(() => ({ ...mockTrip, budget }), [budget]);
+  // ── Derived trip + budget ──
+  const activeTrip = useMemo(() => trips.find((t) => t.id === activeTripId) ?? trips[0] ?? null, [trips, activeTripId]);
+  const [budget, setBudget] = useState(mockTrips[0].budget);
+
+  // Sync budget when switching trips
+  useEffect(() => {
+    if (activeTrip) setBudget(activeTrip.budget);
+  }, [activeTrip]);
+
+  const trip: Trip | null = useMemo(() => (activeTrip ? { ...activeTrip, budget } : null), [activeTrip, budget]);
   const flights: FlightOption[] = mockFlights;
   const lodging: LodgingOption[] = mockLodging;
 
@@ -190,18 +201,83 @@ export function useDemoDashboard() {
 
   const updateBudget = useCallback((n: number) => setBudget(n), []);
 
+  // ── Trip management ──
+  const switchTrip = useCallback((tripId: string) => {
+    setActiveTripId(tripId);
+    setDecisions([]);
+  }, []);
+
+  const createTrip = useCallback(
+    (tripData: Omit<Trip, "id" | "status">) => {
+      const newTrip: Trip = {
+        ...tripData,
+        id: `trip-${Date.now()}`,
+        status: "Planning",
+      };
+      setTrips((prev) => [...prev, newTrip]);
+      setActiveTripId(newTrip.id);
+      setDecisions([]);
+
+      addAction({
+        id: `act-trip-${Date.now()}`,
+        timestamp: new Date().toISOString(),
+        type: "trip",
+        summary: `Trip created: ${tripData.origin} → ${tripData.destination}`,
+        detail: `New trip for ${tripData.travelers} traveler(s), ${tripData.departDate} to ${tripData.returnDate}, budget $${tripData.budget}.`,
+        smsSent: false,
+      });
+
+      setAgentStateRaw("Initializing");
+      setTimeout(() => setAgentStateRaw("Searching Flights"), 2000);
+      setTimeout(() => setAgentStateRaw("Monitoring"), 5000);
+    },
+    [addAction],
+  );
+
+  const deleteTrip = useCallback(
+    (tripId: string) => {
+      setTrips((prev) => {
+        const remaining = prev.filter((t) => t.id !== tripId);
+        if (tripId === activeTripId && remaining.length > 0) {
+          setActiveTripId(remaining[0].id);
+        }
+        if (remaining.length === 0) {
+          setActiveTripId("");
+        }
+        return remaining;
+      });
+      setDecisions([]);
+
+      addAction({
+        id: `act-delete-${Date.now()}`,
+        timestamp: new Date().toISOString(),
+        type: "trip",
+        summary: "Trip deleted",
+        detail: "TripMaster removed the trip and its associated selections.",
+        smsSent: false,
+      });
+    },
+    [activeTripId, addAction],
+  );
+
   // ── Stub mutations (no-op in demo) ──
   const stubMutation = { mutate: () => {}, isPending: false };
 
   return {
     // Data
     trip,
+    trips,
     agentState,
     flights,
     lodging,
     actions,
     isLoading: false,
     error: null,
+
+    // Trip management
+    switchTrip,
+    createTrip,
+    deleteTrip,
 
     // Decisions
     decisions,
