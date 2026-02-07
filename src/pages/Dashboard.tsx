@@ -112,6 +112,7 @@ export default function Dashboard() {
               activeTrip={tripStore.activeTrip}
               onSwitchTrip={tripStore.switchTrip}
               onCreateTrip={tripStore.createTrip}
+              onDeleteTrip={tripStore.deleteTrip}
             />
           </div>
 
