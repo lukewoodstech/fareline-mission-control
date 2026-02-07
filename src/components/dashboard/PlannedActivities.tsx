@@ -1,14 +1,13 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { toast } from "sonner";
 import type { PlannedActivity, ActivityCategory } from "@/types/travel";
 import ActivityThumbnail, { categoryConfig } from "./ActivityThumbnail";
 import {
   CalendarCheck,
   ExternalLink,
   RotateCcw,
-  Copy,
+  MapPin,
   Star,
 } from "lucide-react";
 
@@ -71,15 +70,6 @@ export default function PlannedActivities({
           const mapsQuery = encodeURIComponent(p.activity.title + ", " + p.activity.address);
           const mapsUrl = `https://www.google.com/maps/search/${mapsQuery}`;
 
-          const handleCopyMap = () => {
-            navigator.clipboard.writeText(mapsUrl).then(() => {
-              toast.success("Map link copied!", {
-                description: "Paste in a new browser tab to open Google Maps.",
-                position: "top-center",
-              });
-            });
-          };
-
           return (
             <div
               key={p.activityId}
@@ -121,13 +111,15 @@ export default function PlannedActivities({
                       Website
                     </a>
                   )}
-                  <button
-                    onClick={handleCopyMap}
-                    className="text-xs text-muted-foreground hover:text-primary hover:underline flex items-center gap-1 font-medium cursor-pointer"
+                  <a
+                    href={mapsUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs text-muted-foreground hover:text-primary hover:underline flex items-center gap-1 font-medium"
                   >
-                    <Copy className="h-3 w-3" />
-                    Copy Map Link
-                  </button>
+                    <MapPin className="h-3 w-3" />
+                    Map
+                  </a>
                 </div>
                 <Button
                   variant="ghost"
