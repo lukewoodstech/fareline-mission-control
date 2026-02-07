@@ -117,9 +117,11 @@ export default function Dashboard() {
             </div>
             <div className="h-4 w-px bg-white/20 mx-1" />
             <TripSwitcher
-              trips={hasTrip ? [dashboard.trip!] : []}
+              trips={isDemo ? (dashboard as ReturnType<typeof useDemoDashboard>).trips : (hasTrip ? [dashboard.trip!] : [])}
               activeTrip={dashboard.trip}
-              onSwitchTrip={() => {}}
+              onSwitchTrip={isDemo ? (dashboard as ReturnType<typeof useDemoDashboard>).switchTrip : () => {}}
+              onCreateTrip={isDemo ? (dashboard as ReturnType<typeof useDemoDashboard>).createTrip : undefined}
+              onDeleteTrip={isDemo ? (dashboard as ReturnType<typeof useDemoDashboard>).deleteTrip : undefined}
             />
           </div>
           <DemoToggle isDemo={isDemo} onToggle={setIsDemo} />
