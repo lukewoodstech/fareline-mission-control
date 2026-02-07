@@ -16,38 +16,58 @@ const controls = [
     label: "Re-optimize cheaper",
     description: "Focus on lowest price",
     hint: "Will replace current options",
+    strategy: "cheaper",
+    triggersReopt: true,
   },
   {
     icon: Armchair,
     label: "Re-optimize comfort",
     description: "Prioritize quality",
     hint: "May increase price",
+    strategy: "comfort",
+    triggersReopt: true,
   },
   {
     icon: PauseCircle,
     label: "Pause monitoring",
     description: "Stop live tracking",
     hint: "You can resume anytime",
+    strategy: "",
+    triggersReopt: false,
   },
   {
     icon: BellRing,
     label: "Set alert threshold",
     description: "Customize price alerts",
     hint: "Get notified on drops",
+    strategy: "",
+    triggersReopt: false,
   },
   {
     icon: MessageSquare,
     label: "Request shortlist via SMS",
     description: "Get summary texted",
     hint: "Uses your past rejections",
+    strategy: "",
+    triggersReopt: false,
   },
 ];
 
-export default function Controls() {
-  const handleAction = (label: string) => {
-    toast.success(`${label} — command sent to TripMaster`, {
-      description: "The agent will adjust its strategy on the next cycle.",
-    });
+interface ControlsProps {
+  activeTab: "flights" | "lodging";
+  onReoptimize: (category: "flight" | "lodging", strategy: string) => void;
+}
+
+export default function Controls({ activeTab, onReoptimize }: ControlsProps) {
+  const handleAction = (control: (typeof controls)[0]) => {
+    if (control.triggersReopt) {
+      const category = activeTab === "flights" ? "flight" : "lodging";
+      onReoptimize(category, control.strategy);
+    } else {
+      toast.success(`${control.label} — command sent to TripMaster`, {
+        description: "The agent will adjust its strategy on the next cycle.",
+      });
+    }
   };
 
   return (
@@ -64,7 +84,7 @@ export default function Controls() {
             key={c.label}
             variant="control"
             className="w-full justify-start h-auto py-2 px-3 group"
-            onClick={() => handleAction(c.label)}
+            onClick={() => handleAction(c)}
           >
             <c.icon className="h-4 w-4 mr-3 shrink-0 text-muted-foreground group-hover:text-primary transition-colors" />
             <div className="text-left flex-1">

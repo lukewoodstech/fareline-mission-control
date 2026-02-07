@@ -32,6 +32,7 @@ interface TripStore {
   selectedLodgingId: string | null;
   addAction: (action: AgentAction) => void;
   setAgentState: (state: AgentState) => void;
+  reoptimize: (category: "flight" | "lodging", strategy: string) => void;
 }
 
 export function useTripStore(
@@ -236,6 +237,87 @@ export function useTripStore(
     );
   }, []);
 
+  const reoptimize = useCallback(
+    (category: "flight" | "lodging", strategy: string) => {
+      // Mark all non-selected options as replacing
+      const currentIds =
+        category === "flight"
+          ? flights.filter((f) => f.id !== selectedFlightId).map((f) => f.id)
+          : lodging.filter((l) => l.id !== selectedLodgingId).map((l) => l.id);
+
+      setDecisions((prev) => {
+        const filtered = prev.filter((d) => !currentIds.includes(d.optionId));
+        return [
+          ...filtered,
+          ...currentIds.map((id) => ({
+            optionId: id,
+            category,
+            status: "replacing" as const,
+            timestamp: new Date().toISOString(),
+          })),
+        ];
+      });
+
+      onSetAgentState(
+        category === "flight" ? "Re-optimizing (Flights)" : "Re-optimizing (Lodging)",
+      );
+
+      const reoptAction: AgentAction = {
+        id: `act-reopt-${Date.now()}`,
+        timestamp: new Date().toISOString(),
+        type: "optimize",
+        summary: `Re-optimizing ${category}s — ${strategy}`,
+        detail: `TripMaster is replacing current ${category} options based on the "${strategy}" strategy.`,
+        smsSent: false,
+      };
+      onAddAction(reoptAction);
+
+      setTimeout(() => {
+        if (category === "flight") {
+          setFlights((prev) =>
+            prev.map((f) => {
+              if (f.id === selectedFlightId) return f;
+              const idx = replacementFlightIdx.current % replacementFlights.length;
+              const replacement = {
+                ...replacementFlights[idx],
+                id: `fl-rep-${Date.now()}-${idx}`,
+              };
+              replacementFlightIdx.current += 1;
+              return replacement;
+            }),
+          );
+        } else {
+          setLodging((prev) =>
+            prev.map((l) => {
+              if (l.id === selectedLodgingId) return l;
+              const idx = replacementLodgingIdx.current % replacementLodging.length;
+              const replacement = {
+                ...replacementLodging[idx],
+                id: `lg-rep-${Date.now()}-${idx}`,
+              };
+              replacementLodgingIdx.current += 1;
+              return replacement;
+            }),
+          );
+        }
+
+        setDecisions((prev) => prev.filter((d) => !currentIds.includes(d.optionId)));
+        onSetAgentState("Monitoring");
+
+        const doneAction: AgentAction = {
+          id: `act-reopt-done-${Date.now()}`,
+          timestamp: new Date().toISOString(),
+          type: "optimize",
+          summary: `Found new ${category} options — ${strategy}`,
+          detail: `Replaced ${currentIds.length} options with better matches.`,
+          smsSent: false,
+        };
+        onAddAction(doneAction);
+      }, 1800);
+    },
+    [flights, lodging, selectedFlightId, selectedLodgingId, onAddAction, onSetAgentState],
+  );
+
   return {
     trips,
     activeTrip,
@@ -253,5 +335,6 @@ export function useTripStore(
     selectedLodgingId,
     addAction: onAddAction,
     setAgentState: onSetAgentState,
+    reoptimize,
   };
 }
