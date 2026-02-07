@@ -8,7 +8,7 @@ import {
 } from "@/data/mockData";
 
 export function useDemoMode() {
-  const [isDemo, setIsDemo] = useState(false);
+  const [isDemo, setIsDemo] = useState(true);
   const [agentState, setAgentState] = useState<AgentState>("Monitoring");
   const [actions, setActions] = useState<AgentAction[]>(initialActions);
   const [metrics, setMetrics] = useState<ImpactMetrics>(mockMetrics);
