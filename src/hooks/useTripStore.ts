@@ -33,6 +33,7 @@ interface TripStore {
   addAction: (action: AgentAction) => void;
   setAgentState: (state: AgentState) => void;
   reoptimize: (category: "flight" | "lodging", strategy: string) => void;
+  updateBudget: (newBudget: number) => void;
 }
 
 export function useTripStore(
@@ -318,6 +319,15 @@ export function useTripStore(
     [flights, lodging, selectedFlightId, selectedLodgingId, onAddAction, onSetAgentState],
   );
 
+  const updateBudget = useCallback(
+    (newBudget: number) => {
+      setTrips((prev) =>
+        prev.map((t) => (t.id === activeTripId ? { ...t, budget: newBudget } : t)),
+      );
+    },
+    [activeTripId],
+  );
+
   return {
     trips,
     activeTrip,
@@ -336,5 +346,6 @@ export function useTripStore(
     addAction: onAddAction,
     setAgentState: onSetAgentState,
     reoptimize,
+    updateBudget,
   };
 }
