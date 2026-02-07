@@ -70,22 +70,22 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-background">
       {/* Top bar */}
-      <header className="border-b border-border/30 bg-card/80 backdrop-blur-sm sticky top-0 z-50">
+      <header className="border-b border-white/10 bg-[#1F3A5F] text-white sticky top-0 z-50">
         <div className="container mx-auto flex items-center justify-between h-14 px-4">
           <div className="flex items-center gap-3">
             <Link to="/">
-              <Button variant="ghost" size="sm">
+              <Button variant="ghost" size="sm" className="text-white/80 hover:text-white hover:bg-white/10">
                 <ArrowLeft className="h-3 w-3 mr-1" />
                 Back
               </Button>
             </Link>
             <div className="flex items-center gap-2">
-              <div className="h-7 w-7 rounded-lg bg-primary/20 flex items-center justify-center">
-                <Plane className="h-3.5 w-3.5 text-primary" />
+              <div className="h-7 w-7 rounded-lg bg-white/15 flex items-center justify-center">
+                <Plane className="h-3.5 w-3.5 text-white" />
               </div>
-              <span className="font-bold tracking-tight">TripMaster</span>
+              <span className="font-bold tracking-tight text-white">TripMaster</span>
             </div>
-            <div className="h-4 w-px bg-border/50 mx-1" />
+            <div className="h-4 w-px bg-white/20 mx-1" />
             <TripSwitcher
               trips={tripStore.trips}
               activeTrip={tripStore.activeTrip}
