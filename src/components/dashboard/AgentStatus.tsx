@@ -2,9 +2,9 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import type { AgentState, Trip } from "@/types/travel";
-import { Activity, Loader2, Pause, Search, CheckCircle2, Eye } from "lucide-react";
+import { Activity, Loader2, Pause, Search, CheckCircle2, Eye, PauseCircle } from "lucide-react";
 
-const stateConfig: Record<AgentState, { icon: React.ElementType; color: string; badgeVariant: "status" | "success" | "accent" | "muted" }> = {
+const stateConfig: Record<AgentState, { icon: React.ElementType; color: string; badgeVariant: "status" | "success" | "accent" | "muted" | "destructive" }> = {
   "Idle": { icon: Pause, color: "text-muted-foreground", badgeVariant: "muted" },
   "Initializing": { icon: Loader2, color: "text-primary", badgeVariant: "status" },
   "Searching Flights": { icon: Search, color: "text-primary", badgeVariant: "status" },
@@ -14,6 +14,7 @@ const stateConfig: Record<AgentState, { icon: React.ElementType; color: string; 
   "Re-optimizing (Lodging)": { icon: Loader2, color: "text-accent", badgeVariant: "accent" },
   "Waiting for Approval": { icon: CheckCircle2, color: "text-accent", badgeVariant: "accent" },
   "Monitoring": { icon: Eye, color: "text-success", badgeVariant: "success" },
+  "Paused": { icon: PauseCircle, color: "text-muted-foreground", badgeVariant: "muted" },
 };
 
 interface AgentStatusProps {
@@ -59,8 +60,8 @@ export default function AgentStatus({ state, trip, currentStep, totalSteps = 5 }
         </div>
 
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
-          <div className={`h-2 w-2 rounded-full ${isAnimating ? "bg-primary animate-status-pulse" : state === "Monitoring" ? "bg-success" : "bg-muted-foreground"}`} />
-          <span>{isAnimating ? "Agent is actively working…" : state === "Monitoring" ? "Watching for changes" : "Standing by"}</span>
+          <div className={`h-2 w-2 rounded-full ${isAnimating ? "bg-primary animate-status-pulse" : state === "Monitoring" ? "bg-success" : state === "Paused" ? "bg-muted-foreground" : "bg-muted-foreground"}`} />
+          <span>{isAnimating ? "Agent is actively working…" : state === "Monitoring" ? "Monitoring for better prices" : state === "Paused" ? "Monitoring paused" : "Standing by"}</span>
         </div>
       </CardContent>
     </Card>

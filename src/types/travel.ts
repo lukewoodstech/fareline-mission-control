@@ -7,7 +7,8 @@ export type AgentState =
   | "Re-optimizing (Flights)"
   | "Re-optimizing (Lodging)"
   | "Waiting for Approval"
-  | "Monitoring";
+  | "Monitoring"
+  | "Paused";
 
 export type TripStatus = "Planning" | "Monitoring" | "Locked";
 
