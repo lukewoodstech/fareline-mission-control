@@ -3,9 +3,11 @@ export type AgentState =
   | "Initializing"
   | "Searching Flights"
   | "Searching Lodging"
+  | "Searching Activities"
   | "Re-optimizing"
   | "Re-optimizing (Flights)"
   | "Re-optimizing (Lodging)"
+  | "Re-optimizing (Activities)"
   | "Waiting for Approval"
   | "Monitoring"
   | "Paused";
@@ -87,6 +89,36 @@ export type LodgingRejectReason =
   | "No free cancellation"
   | "Not the vibe"
   | "Amenities missing";
+
+export type ActivityCategory = "Food" | "Outdoor" | "Culture" | "Event" | "Relaxation";
+
+export interface ActivityOption {
+  id: string;
+  title: string;
+  category: ActivityCategory;
+  description: string;
+  duration: string;
+  suggestedDay: number;
+  suggestedTime?: string;
+  price: number | null;
+  tag?: "Top Pick" | "Local Gem" | "Must Do";
+  bookingUrl?: string;
+}
+
+export type ActivityRejectReason =
+  | "Not interested"
+  | "Too expensive"
+  | "Wrong vibe"
+  | "Too long"
+  | "Bad timing"
+  | "Already planned something similar";
+
+export interface PlannedActivity {
+  activityId: string;
+  activity: ActivityOption;
+  day: number;
+  order: number;
+}
 
 export interface OptionDecision {
   optionId: string;

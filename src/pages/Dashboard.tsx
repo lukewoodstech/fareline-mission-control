@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { useDemoMode } from "@/hooks/useDemoMode";
 import { useTripStore } from "@/hooks/useTripStore";
+import { useActivityStore } from "@/hooks/useActivityStore";
 import { mockPreferences } from "@/data/mockData";
 
 import AgentStatus from "@/components/dashboard/AgentStatus";
@@ -19,8 +20,12 @@ import FlightPreferences from "@/components/dashboard/FlightPreferences";
 import LodgingPreferences from "@/components/dashboard/LodgingPreferences";
 import DemoToggle from "@/components/dashboard/DemoToggle";
 import TripSwitcher from "@/components/dashboard/TripSwitcher";
+import SuggestedActivities from "@/components/dashboard/SuggestedActivities";
+import PlannedActivities from "@/components/dashboard/PlannedActivities";
+import ActivityControls from "@/components/dashboard/ActivityControls";
+import ActivityPreferences from "@/components/dashboard/ActivityPreferences";
 
-type DashboardTab = "flights" | "lodging";
+type DashboardTab = "flights" | "lodging" | "activities";
 
 export default function Dashboard() {
   const [activeTab, setActiveTab] = useState<DashboardTab>("flights");
@@ -36,6 +41,7 @@ export default function Dashboard() {
   } = useDemoMode();
 
   const tripStore = useTripStore(addAction, setAgentState);
+  const activityStore = useActivityStore(addAction, setAgentState);
 
   const lastAction = actions[0];
 
@@ -55,6 +61,12 @@ export default function Dashboard() {
       description: "Check your SMS for the full trip summary.",
     });
   };
+
+  const tabs: { key: DashboardTab; label: string }[] = [
+    { key: "flights", label: "Flights" },
+    { key: "lodging", label: "Lodging" },
+    { key: "activities", label: "Activities" },
+  ];
 
   return (
     <div className="min-h-screen bg-background">
@@ -121,39 +133,29 @@ export default function Dashboard() {
         {/* Row 2: Impact Metrics */}
         <ImpactMetrics metrics={metrics} />
 
-        {/* Subnav tabs — now above cards, below metrics */}
+        {/* Subnav tabs */}
         <nav className="flex items-center gap-1 border-b border-border/20 pb-0">
-          <button
-            onClick={() => setActiveTab("flights")}
-            className={`relative px-4 py-2.5 text-sm font-medium transition-colors ${
-              activeTab === "flights"
-                ? "text-primary"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            Flights
-            {activeTab === "flights" && (
-              <span className="absolute bottom-0 left-2 right-2 h-0.5 bg-primary rounded-full" />
-            )}
-          </button>
-          <button
-            onClick={() => setActiveTab("lodging")}
-            className={`relative px-4 py-2.5 text-sm font-medium transition-colors ${
-              activeTab === "lodging"
-                ? "text-primary"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            Lodging
-            {activeTab === "lodging" && (
-              <span className="absolute bottom-0 left-2 right-2 h-0.5 bg-primary rounded-full" />
-            )}
-          </button>
+          {tabs.map((tab) => (
+            <button
+              key={tab.key}
+              onClick={() => setActiveTab(tab.key)}
+              className={`relative px-4 py-2.5 text-sm font-medium transition-colors ${
+                activeTab === tab.key
+                  ? "text-primary"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {tab.label}
+              {activeTab === tab.key && (
+                <span className="absolute bottom-0 left-2 right-2 h-0.5 bg-primary rounded-full" />
+              )}
+            </button>
+          ))}
         </nav>
 
-        {/* Tab Content — cards + controls */}
+        {/* Tab Content */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-          {activeTab === "flights" ? (
+          {activeTab === "flights" && (
             <>
               <div className="lg:col-span-8">
                 <BestFlights
@@ -181,7 +183,9 @@ export default function Dashboard() {
                 />
               </div>
             </>
-          ) : (
+          )}
+
+          {activeTab === "lodging" && (
             <>
               <div className="lg:col-span-8">
                 <BestLodging
@@ -212,6 +216,36 @@ export default function Dashboard() {
                     }
                   }}
                   onReoptimize={(strategy) => tripStore.reoptimize("lodging", strategy)}
+                />
+              </div>
+            </>
+          )}
+
+          {activeTab === "activities" && (
+            <>
+              <div className="lg:col-span-8 space-y-4">
+                <SuggestedActivities
+                  activities={activityStore.suggestions}
+                  getDecision={activityStore.getActivityDecision}
+                  onSelect={activityStore.selectActivity}
+                  onReject={activityStore.rejectActivity}
+                />
+                {activityStore.planned.length > 0 && (
+                  <PlannedActivities
+                    planned={activityStore.planned}
+                    tripDepartDate={tripStore.activeTrip.departDate}
+                    onRemove={activityStore.removeFromPlan}
+                  />
+                )}
+              </div>
+              <div className="lg:col-span-4 space-y-4">
+                <ActivityControls
+                  agentState={agentState}
+                  onReoptimize={activityStore.reoptimizeActivities}
+                  onSetAgentState={setAgentState}
+                />
+                <ActivityPreferences
+                  onReoptimize={activityStore.reoptimizeActivities}
                 />
               </div>
             </>
