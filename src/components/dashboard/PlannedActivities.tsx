@@ -67,9 +67,8 @@ export default function PlannedActivities({
           const CatIcon = cat.icon;
           const catColor = categoryColors[p.activity.category];
 
-          const mapsUrl = p.activity.gps_coordinates
-            ? `https://www.google.com/maps/search/?api=1&query=${p.activity.gps_coordinates.latitude},${p.activity.gps_coordinates.longitude}`
-            : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.activity.title + ", " + p.activity.address)}`;
+          const mapsQuery = encodeURIComponent(p.activity.title + ", " + p.activity.address);
+          const mapsUrl = `https://maps.google.com/maps?q=${mapsQuery}`;
 
           return (
             <div
@@ -112,13 +111,15 @@ export default function PlannedActivities({
                       Website
                     </a>
                   )}
-                  <button
-                    onClick={() => window.open(mapsUrl, '_blank', 'noopener,noreferrer')}
-                    className="text-xs text-muted-foreground hover:text-primary hover:underline flex items-center gap-1 font-medium cursor-pointer"
+                  <a
+                    href={mapsUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs text-muted-foreground hover:text-primary hover:underline flex items-center gap-1 font-medium"
                   >
                     <MapPin className="h-3 w-3" />
                     Map
-                  </button>
+                  </a>
                 </div>
                 <Button
                   variant="ghost"

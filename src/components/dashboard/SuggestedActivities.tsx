@@ -165,9 +165,8 @@ function ActivityCard({
     }
   };
 
-  const mapsUrl = activity.gps_coordinates
-    ? `https://www.google.com/maps/search/?api=1&query=${activity.gps_coordinates.latitude},${activity.gps_coordinates.longitude}`
-    : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(activity.title + ", " + activity.address)}`;
+  const mapsQuery = encodeURIComponent(activity.title + ", " + activity.address);
+  const mapsUrl = `https://maps.google.com/maps?q=${mapsQuery}`;
 
   return (
     <div className="rounded-lg p-3.5 bg-elevated/50 hover:bg-elevated/80 hover:shadow-sm transition-all duration-200 animate-fade-in-card">
@@ -249,13 +248,15 @@ function ActivityCard({
                 </TooltipContent>
               </Tooltip>
             ) : null}
-            <button
-              onClick={() => window.open(mapsUrl, '_blank', 'noopener,noreferrer')}
-              className="text-xs text-muted-foreground hover:text-primary hover:underline flex items-center gap-1 transition-colors cursor-pointer"
+            <a
+              href={mapsUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs text-muted-foreground hover:text-primary hover:underline flex items-center gap-1 transition-colors"
             >
               <MapPin className="h-3 w-3" />
               Map
-            </button>
+            </a>
           </div>
           <div className="flex items-center gap-2">
             <Button
