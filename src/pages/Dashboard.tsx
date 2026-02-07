@@ -133,6 +133,9 @@ export default function Dashboard() {
         {/* Row 2: Impact Metrics */}
         <ImpactMetrics metrics={metrics} />
 
+        {/* Activity Feed — cross-tab agent & user action log */}
+        <LiveActivityFeed actions={actions} />
+
         {/* Subnav tabs */}
         <nav className="flex items-center gap-1 border-b border-border/20 pb-0">
           {tabs.map((tab) => (
@@ -252,8 +255,7 @@ export default function Dashboard() {
           )}
         </div>
 
-        {/* Activity Feed — at the bottom, supporting evidence */}
-        <LiveActivityFeed actions={actions} />
+        {/* end tab content */}
       </main>
     </div>
   );
