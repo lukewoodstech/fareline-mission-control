@@ -106,6 +106,7 @@ export interface ActivityOption {
   website?: string;
   thumbnail?: string;
   gps_coordinates?: { latitude: number; longitude: number };
+  estimatedCost?: number; // numeric cost for budget tracking
   tag?: "Top Pick" | "Local Gem" | "Must Do";
 }
 
