@@ -112,15 +112,13 @@ export default function PlannedActivities({
                       Website
                     </a>
                   )}
-                  <a
-                    href={mapsUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-xs text-muted-foreground hover:text-primary hover:underline flex items-center gap-1 font-medium"
+                  <button
+                    onClick={() => window.open(mapsUrl, '_blank', 'noopener,noreferrer')}
+                    className="text-xs text-muted-foreground hover:text-primary hover:underline flex items-center gap-1 font-medium cursor-pointer"
                   >
                     <MapPin className="h-3 w-3" />
                     Map
-                  </a>
+                  </button>
                 </div>
                 <Button
                   variant="ghost"
