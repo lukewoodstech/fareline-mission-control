@@ -151,11 +151,13 @@ export default function Controls({
                     </span>
                   )}
                 </div>
-                <p className="text-xs text-muted-foreground font-normal">
-                  {savedThreshold !== null
-                    ? `Alert when below $${savedThreshold}`
-                    : "Customize price alerts"}
-                </p>
+                {savedThreshold !== null ? (
+                  <p className="text-xs text-primary/80 font-normal">
+                    Alert when below ${savedThreshold}
+                  </p>
+                ) : (
+                  <p className="text-xs text-muted-foreground font-normal">Customize price alerts</p>
+                )}
                 <p className="text-[10px] text-muted-foreground/60 font-normal mt-0.5">Get notified on drops</p>
               </div>
             </Button>
