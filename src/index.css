@@ -139,6 +139,17 @@
   }
 }
 
+@keyframes fade-in-card {
+  from {
+    opacity: 0;
+    transform: translateY(4px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
 .animate-pulse-glow {
   animation: pulse-glow 2s ease-in-out infinite;
 }
@@ -149,6 +160,10 @@
 
 .animate-status-pulse {
   animation: status-pulse 2s ease-in-out infinite;
+}
+
+.animate-fade-in-card {
+  animation: fade-in-card 0.4s ease-out forwards;
 }
 
 /* Scrollbar styling */
