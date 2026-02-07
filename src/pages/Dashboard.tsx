@@ -18,7 +18,7 @@ import ImpactMetrics from "@/components/dashboard/ImpactMetrics";
 import Controls from "@/components/dashboard/Controls";
 import FlightPreferences from "@/components/dashboard/FlightPreferences";
 import LodgingPreferences from "@/components/dashboard/LodgingPreferences";
-import DemoToggle from "@/components/dashboard/DemoToggle";
+
 import TripSwitcher from "@/components/dashboard/TripSwitcher";
 import SuggestedActivities from "@/components/dashboard/SuggestedActivities";
 import PlannedActivities from "@/components/dashboard/PlannedActivities";
@@ -94,7 +94,7 @@ export default function Dashboard() {
             />
           </div>
 
-          <DemoToggle isDemo={isDemo} onToggle={setIsDemo} />
+          
         </div>
       </header>
 
