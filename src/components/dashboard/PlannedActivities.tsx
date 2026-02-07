@@ -2,24 +2,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import type { PlannedActivity, ActivityCategory } from "@/types/travel";
+import ActivityThumbnail, { categoryConfig } from "./ActivityThumbnail";
 import {
   CalendarCheck,
   ExternalLink,
   RotateCcw,
-  UtensilsCrossed,
-  Mountain,
-  Camera,
-  Ticket,
   MapPin,
   Star,
 } from "lucide-react";
-
-const categoryIcons: Record<ActivityCategory, typeof UtensilsCrossed> = {
-  Restaurant: UtensilsCrossed,
-  Hike: Mountain,
-  Sightseeing: Camera,
-  Activity: Ticket,
-};
 
 const categoryColors: Record<ActivityCategory, string> = {
   Restaurant: "text-orange-400",
@@ -73,7 +63,8 @@ export default function PlannedActivities({
       </CardHeader>
       <CardContent className="space-y-2">
         {planned.map((p) => {
-          const CatIcon = categoryIcons[p.activity.category];
+          const cat = categoryConfig[p.activity.category];
+          const CatIcon = cat.icon;
           const catColor = categoryColors[p.activity.category];
 
           const mapsUrl = p.activity.gps_coordinates
@@ -86,18 +77,7 @@ export default function PlannedActivities({
               className="rounded-lg bg-primary/5 ring-1 ring-primary/15 p-2.5 animate-fade-in"
             >
               <div className="flex gap-2.5 mb-1">
-                {p.activity.thumbnail ? (
-                  <img
-                    src={p.activity.thumbnail}
-                    alt={p.activity.title}
-                    referrerPolicy="no-referrer"
-                    className="h-12 w-16 rounded-md object-cover shrink-0 bg-secondary"
-                  />
-                ) : (
-                  <div className={`h-12 w-16 rounded-md bg-primary/10 flex items-center justify-center shrink-0`}>
-                    <CatIcon className={`h-4 w-4 ${catColor}`} />
-                  </div>
-                )}
+                <ActivityThumbnail activity={p.activity} size="sm" />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-1.5 min-w-0">
