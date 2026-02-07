@@ -18,6 +18,7 @@ interface BestFlightsProps {
   onSelect: (id: string) => void;
   onReject: (id: string, reason: string) => void;
   onToggleMonitor: (id: string) => void;
+  onUnselect: (id: string) => void;
 }
 
 export default function BestFlights({
@@ -27,6 +28,7 @@ export default function BestFlights({
   onSelect,
   onReject,
   onToggleMonitor,
+  onUnselect,
 }: BestFlightsProps) {
   return (
     <Card>
@@ -47,7 +49,7 @@ export default function BestFlights({
             return (
               <div
                 key={f.id}
-                className="rounded-lg border border-border bg-secondary/30 p-4 space-y-3"
+                className="rounded-lg bg-secondary/20 p-4 space-y-3"
               >
                 <div className="flex items-center justify-between">
                   <Skeleton className="h-4 w-32" />
@@ -56,7 +58,7 @@ export default function BestFlights({
                 <Skeleton className="h-3 w-48" />
                 <Skeleton className="h-3 w-36" />
                 <p className="text-xs text-muted-foreground animate-pulse-glow">
-                  Finding a better option…
+                  TripMaster is finding a better option…
                 </p>
               </div>
             );
@@ -65,12 +67,12 @@ export default function BestFlights({
           return (
             <div
               key={f.id}
-              className={`rounded-lg border p-4 transition-all ${
+              className={`rounded-lg p-4 transition-all ${
                 isSelected
-                  ? "border-success/50 bg-success/5 ring-1 ring-success/20"
+                  ? "bg-primary/5 ring-1 ring-primary/30 shadow-sm shadow-primary/10"
                   : isDeemphasized
-                  ? "border-border bg-secondary/10 opacity-60"
-                  : "border-border bg-secondary/30 hover:border-primary/30"
+                  ? "bg-secondary/10 opacity-50"
+                  : "bg-elevated/50 hover:bg-elevated/80"
               }`}
             >
               <div className="flex items-center justify-between mb-3">
@@ -108,6 +110,7 @@ export default function BestFlights({
                 onSelect={() => onSelect(f.id)}
                 onReject={(reason) => onReject(f.id, reason)}
                 onToggleMonitor={() => onToggleMonitor(f.id)}
+                onUnselect={() => onUnselect(f.id)}
               />
             </div>
           );

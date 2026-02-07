@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ExternalLink, Check, X } from "lucide-react";
+import { ExternalLink, Check, X, RotateCcw } from "lucide-react";
 import type { FlightRejectReason, LodgingRejectReason, OptionDecision } from "@/types/travel";
 
 const FLIGHT_REASONS: FlightRejectReason[] = [
@@ -31,6 +31,7 @@ interface OptionActionsProps {
   onSelect: () => void;
   onReject: (reason: string) => void;
   onToggleMonitor: () => void;
+  onUnselect: () => void;
 }
 
 export default function OptionActions({
@@ -41,6 +42,7 @@ export default function OptionActions({
   onSelect,
   onReject,
   onToggleMonitor,
+  onUnselect,
 }: OptionActionsProps) {
   const [showReasons, setShowReasons] = useState(false);
   const [otherReason, setOtherReason] = useState("");
@@ -70,7 +72,7 @@ export default function OptionActions({
 
   if (isSelected) {
     return (
-      <div className="flex items-center justify-between pt-3 mt-3 border-t border-border">
+      <div className="flex items-center justify-between pt-3 mt-3 border-t border-border/30">
         <a
           href={bookingUrl ?? "#"}
           target="_blank"
@@ -94,13 +96,22 @@ export default function OptionActions({
             <Check className="h-3 w-3" />
             Selected
           </span>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-6 text-xs px-2 text-muted-foreground hover:text-destructive"
+            onClick={onUnselect}
+          >
+            <RotateCcw className="h-3 w-3 mr-1" />
+            Replace
+          </Button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="pt-3 mt-3 border-t border-border space-y-2">
+    <div className="pt-3 mt-3 border-t border-border/30 space-y-2">
       <div className="flex items-center justify-between">
         <a
           href={bookingUrl ?? "#"}

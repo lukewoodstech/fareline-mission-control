@@ -47,7 +47,7 @@ export default function ImpactMetrics({ metrics }: ImpactMetricsProps) {
   return (
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
       {items.map((item) => (
-        <Card key={item.label} className="border-border/50">
+        <Card key={item.label}>
           <CardContent className="p-4">
             <div className="flex items-center gap-2 mb-2">
               <div className={`h-8 w-8 rounded-lg ${item.bg} flex items-center justify-center`}>

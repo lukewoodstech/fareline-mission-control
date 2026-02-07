@@ -51,7 +51,7 @@ export default function TripSwitcher({
               <ChevronDown className="h-3 w-3 text-muted-foreground" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="start" className="w-64 bg-card border-border z-50">
+          <DropdownMenuContent align="start" className="w-64 bg-card z-50">
             {trips.map((trip) => (
               <DropdownMenuItem
                 key={trip.id}
