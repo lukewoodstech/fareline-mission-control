@@ -1,0 +1,233 @@
+import type {
+  Trip,
+  Preferences,
+  AgentAction,
+  FlightOption,
+  LodgingOption,
+  ImpactMetrics,
+  AgentState,
+} from "@/types/travel";
+
+export const mockTrip: Trip = {
+  id: "trip-001",
+  origin: "DEN",
+  destination: "SAN",
+  departDate: "2025-03-14",
+  returnDate: "2025-03-17",
+  budget: 700,
+  travelers: 1,
+};
+
+export const mockPreferences: Preferences = {
+  avoidRedEyes: true,
+  preferNonstop: true,
+  maxStops: 1,
+  minHotelRating: 4.3,
+  preferWindow: true,
+  earlyCheckIn: false,
+};
+
+export const mockFlights: FlightOption[] = [
+  {
+    id: "fl-1",
+    airline: "United Airlines",
+    price: 187,
+    departure: "7:15 AM",
+    arrival: "8:42 AM",
+    duration: "2h 27m",
+    stops: 0,
+    tag: "Best Value",
+    cabin: "Economy",
+    bookingClass: "K",
+  },
+  {
+    id: "fl-2",
+    airline: "Southwest",
+    price: 212,
+    departure: "10:30 AM",
+    arrival: "11:55 AM",
+    duration: "2h 25m",
+    stops: 0,
+    tag: "Most Flexible",
+    cabin: "Wanna Get Away Plus",
+    bookingClass: "W",
+  },
+  {
+    id: "fl-3",
+    airline: "Frontier",
+    price: 134,
+    departure: "6:00 AM",
+    arrival: "9:45 AM",
+    duration: "3h 45m",
+    stops: 1,
+    tag: "Fastest",
+    cabin: "Economy",
+    bookingClass: "Y",
+  },
+];
+
+export const mockLodging: LodgingOption[] = [
+  {
+    id: "lg-1",
+    name: "The Sofia Hotel",
+    price: 387,
+    perNight: 129,
+    rating: 4.5,
+    reviewCount: 2341,
+    amenities: ["Free WiFi", "Rooftop Pool", "Fitness Center", "Restaurant"],
+    tag: "Best Value",
+    neighborhood: "Gaslamp Quarter",
+    cancellation: "Free cancellation until Mar 12",
+  },
+  {
+    id: "lg-2",
+    name: "Pendry San Diego",
+    price: 498,
+    perNight: 166,
+    rating: 4.8,
+    reviewCount: 1876,
+    amenities: ["Spa", "Pool", "Valet Parking", "Ocean View"],
+    tag: "Top Rated",
+    neighborhood: "Gaslamp Quarter",
+    cancellation: "Free cancellation until Mar 10",
+  },
+  {
+    id: "lg-3",
+    name: "Hilton Garden Inn",
+    price: 342,
+    perNight: 114,
+    rating: 4.3,
+    reviewCount: 3102,
+    amenities: ["Free WiFi", "Breakfast Included", "Parking"],
+    tag: "Best Location",
+    neighborhood: "Little Italy",
+    cancellation: "Non-refundable",
+  },
+];
+
+export const mockMetrics: ImpactMetrics = {
+  moneySaved: 127,
+  baselinePrice: 701,
+  timeSavedHours: 3.5,
+  alertsSent: 4,
+  optionsEvaluated: 847,
+};
+
+export const initialActions: AgentAction[] = [
+  {
+    id: "act-1",
+    timestamp: "2025-03-10T14:32:00Z",
+    type: "search",
+    summary: "Initiated flight search for DEN → SAN",
+    detail: "Scanning 6 airlines across 3 booking platforms for March 14–17.",
+    rationale: [
+      "Tuesday departures historically 18% cheaper on this route",
+      "Checking early morning and midday windows per preference",
+      "Excluding red-eye flights as configured",
+    ],
+    smsSent: false,
+  },
+  {
+    id: "act-2",
+    timestamp: "2025-03-10T14:33:15Z",
+    type: "compare",
+    summary: "Evaluated 214 flight options",
+    detail: "Narrowed to top 3 based on price, duration, and nonstop preference.",
+    smsSent: false,
+  },
+  {
+    id: "act-3",
+    timestamp: "2025-03-10T14:34:42Z",
+    type: "alert",
+    summary: "Price drop detected: United $187 (was $221)",
+    detail: "United flight UA 1472 dropped $34 in the last 2 hours. Now the best-value option.",
+    rationale: [
+      "Price is 15% below 7-day average for this route",
+      "Nonstop flight matches your preference",
+      "Morning departure aligns with travel patterns",
+    ],
+    smsSent: true,
+  },
+  {
+    id: "act-4",
+    timestamp: "2025-03-10T14:36:00Z",
+    type: "search",
+    summary: "Started lodging search in San Diego",
+    detail: "Searching hotels and vacation rentals near downtown, Gaslamp, and Little Italy.",
+    smsSent: false,
+  },
+  {
+    id: "act-5",
+    timestamp: "2025-03-10T14:38:30Z",
+    type: "compare",
+    summary: "Reviewed 633 lodging options",
+    detail: "Filtered to properties rated 4.3+ with free cancellation. 3 finalists selected.",
+    smsSent: false,
+  },
+  {
+    id: "act-6",
+    timestamp: "2025-03-10T14:40:00Z",
+    type: "sms",
+    summary: "Sent shortlist via SMS",
+    detail: "Your top 3 flights and 3 hotels are ready. Total best combo: $574 (26% under budget).",
+    smsSent: true,
+  },
+];
+
+export const demoAgentStates: AgentState[] = [
+  "Searching Flights",
+  "Searching Lodging",
+  "Re-optimizing",
+  "Monitoring",
+  "Waiting for Approval",
+  "Idle",
+];
+
+export const demoNewActions: Omit<AgentAction, "id" | "timestamp">[] = [
+  {
+    type: "monitor",
+    summary: "Monitoring fare changes on shortlisted flights",
+    detail: "All 3 recommended flights still available. No price changes in the last 30 minutes.",
+    smsSent: false,
+  },
+  {
+    type: "optimize",
+    summary: "Re-optimizing for comfort preferences",
+    detail: "Exploring premium economy and better-rated hotels within a $50 flex range.",
+    rationale: [
+      "Budget has $126 remaining — enough for upgrades",
+      "Premium economy adds 3 inches legroom",
+      "Window seat available on United option",
+    ],
+    smsSent: false,
+  },
+  {
+    type: "alert",
+    summary: "New option found: Marriott Gaslamp at $119/night",
+    detail: "Marriott just released a flash sale. Rating 4.6, includes breakfast. $30 cheaper than current pick.",
+    smsSent: true,
+  },
+  {
+    type: "compare",
+    summary: "Updated rankings after new data",
+    detail: "Recalculated value scores. The Sofia Hotel remains best overall, but Marriott is now #2.",
+    smsSent: false,
+  },
+  {
+    type: "sms",
+    summary: "Price alert sent: Frontier dropped to $118",
+    detail: "Budget carrier option now available at $118. 1 stop via PHX. Savings of $69 vs. United nonstop.",
+    rationale: [
+      "Lowest price seen on this route in 14 days",
+      "1 stop adds 1h 20m — within your max-stops preference",
+      "No baggage included — carry-on only",
+    ],
+    smsSent: true,
+  },
+  {
+    type: "monitor",
+    summary: "All options stable — continuing to watch",
+    detail: "No changes detected in the last monitoring cycle. Next check in 5 minutes.",
+    smsSent: false,
+  },
+];
