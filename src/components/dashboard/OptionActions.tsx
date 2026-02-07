@@ -104,7 +104,7 @@ export default function OptionActions({
               rel="noopener noreferrer"
             >
               <ExternalLink className="h-3.5 w-3.5" />
-              Book on {category === "flight" ? "airline" : "hotel"} site
+              Book Now
             </a>
           </Button>
           <div className="flex items-center gap-2">
@@ -137,22 +137,6 @@ export default function OptionActions({
   return (
     <div className="pt-3 mt-3 border-t border-border/20 space-y-2">
       <div className="flex items-center justify-between">
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <a
-              href={bookingUrl ?? "#"}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-xs text-muted-foreground hover:text-primary hover:underline flex items-center gap-1 transition-colors"
-            >
-              <ExternalLink className="h-3 w-3" />
-              Book on {category === "flight" ? "airline" : "hotel"} site
-            </a>
-          </TooltipTrigger>
-          <TooltipContent side="top" className="text-xs">
-            Opens external booking page
-          </TooltipContent>
-        </Tooltip>
         <div className="flex items-center gap-2">
           <Button
             variant="success"
@@ -166,7 +150,22 @@ export default function OptionActions({
           <Button
             variant="outline"
             size="sm"
-            className="h-8 text-xs px-3 border-destructive/30 text-destructive/80 hover:text-destructive hover:bg-destructive/10 hover:border-destructive/50"
+            className="h-8 text-xs px-3 font-medium gap-1.5"
+            asChild
+          >
+            <a
+              href={bookingUrl ?? "#"}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <ExternalLink className="h-3 w-3" />
+              Book
+            </a>
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-8 text-xs px-3 text-destructive/70 hover:text-destructive hover:bg-destructive/10"
             onClick={handleRejectClick}
           >
             <ThumbsDown className="h-3.5 w-3.5 mr-1.5" />
