@@ -16,13 +16,15 @@ interface LodgingPreferencesProps {
   initial: Preferences;
   destination?: string;
   onNeighborhoodChange?: (neighborhoods: string[]) => void;
+  onReoptimize?: (strategy: string) => void;
 }
 
-export default function LodgingPreferences({ initial, destination, onNeighborhoodChange }: LodgingPreferencesProps) {
+export default function LodgingPreferences({ initial, destination, onNeighborhoodChange, onReoptimize }: LodgingPreferencesProps) {
   const [prefs, setPrefs] = useState(initial);
   const [neighborhoodInput, setNeighborhoodInput] = useState("");
   const [selectedNeighborhoods, setSelectedNeighborhoods] = useState<string[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [freeCancelOnly, setFreeCancelOnly] = useState(false);
 
   const suggestions = NEIGHBORHOOD_SUGGESTIONS[destination ?? ""] ?? NEIGHBORHOOD_SUGGESTIONS.default;
   const filteredSuggestions = suggestions.filter(
@@ -168,7 +170,10 @@ export default function LodgingPreferences({ initial, destination, onNeighborhoo
             <span className="text-sm">Early check-in</span>
             <Switch
               checked={prefs.earlyCheckIn}
-              onCheckedChange={(v) => setPrefs((p) => ({ ...p, earlyCheckIn: v }))}
+              onCheckedChange={(v) => {
+                setPrefs((p) => ({ ...p, earlyCheckIn: v }));
+                onReoptimize?.(`Early check-in: ${v ? "on" : "off"}`);
+              }}
             />
           </div>
         </div>
@@ -179,8 +184,11 @@ export default function LodgingPreferences({ initial, destination, onNeighborhoo
           <div className="flex items-center justify-between">
             <span className="text-sm">Free cancellation only</span>
             <Switch
-              checked={false}
-              onCheckedChange={() => {}}
+              checked={freeCancelOnly}
+              onCheckedChange={(v) => {
+                setFreeCancelOnly(v);
+                onReoptimize?.(`Free cancellation only: ${v ? "on" : "off"}`);
+              }}
             />
           </div>
           <div className="flex items-center justify-between">

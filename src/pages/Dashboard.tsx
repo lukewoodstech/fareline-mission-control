@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Plane, ArrowLeft } from "lucide-react";
+import { Plane, ArrowLeft, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { toast } from "sonner";
 import { useDemoMode } from "@/hooks/useDemoMode";
 import { useTripStore } from "@/hooks/useTripStore";
 import { mockPreferences } from "@/data/mockData";
@@ -29,7 +30,6 @@ export default function Dashboard() {
     setIsDemo,
     agentState,
     setAgentState,
-    currentStep,
     actions,
     metrics,
     addAction,
@@ -40,6 +40,21 @@ export default function Dashboard() {
   const lastAction = actions[0];
 
   const bothSelected = tripStore.selectedFlightId && tripStore.selectedLodgingId;
+
+  const handleSendItinerary = () => {
+    addAction({
+      id: `act-itinerary-${Date.now()}`,
+      timestamp: new Date().toISOString(),
+      type: "sms",
+      summary: "Itinerary sent via SMS — flight + lodging confirmed",
+      detail: "TripMaster compiled your selected flight and lodging into a complete itinerary and sent it to your phone.",
+      smsSent: true,
+    });
+    toast.success("Itinerary sent to your phone!", {
+      position: "top-center",
+      description: "Check your SMS for the full trip summary.",
+    });
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -74,15 +89,23 @@ export default function Dashboard() {
 
       {/* Dashboard grid */}
       <main className="container mx-auto px-4 py-6 space-y-6">
-        {/* Trip status banner */}
+        {/* Trip status banner — strengthened */}
         {bothSelected && (
-          <div className="rounded-xl bg-success/5 px-4 py-3 flex items-center justify-between animate-slide-up shadow-sm">
+          <div className="rounded-xl bg-success/5 ring-1 ring-success/20 px-4 py-3 flex items-center justify-between animate-slide-up shadow-sm">
             <div className="flex items-center gap-2">
               <Badge variant="success" className="text-xs">Ready to book</Badge>
               <span className="text-sm text-muted-foreground">
-                Flight and lodging selected — your trip is locked in.
+                TripMaster has locked in your best options
               </span>
             </div>
+            <Button
+              size="sm"
+              className="h-8 text-xs px-4 font-medium gap-1.5"
+              onClick={handleSendItinerary}
+            >
+              <MessageSquare className="h-3.5 w-3.5" />
+              Send itinerary via SMS
+            </Button>
           </div>
         )}
 
@@ -91,7 +114,6 @@ export default function Dashboard() {
           <AgentStatus
             state={agentState}
             trip={tripStore.activeTrip}
-            currentStep={currentStep}
           />
           {lastAction && <LastAgentAction action={lastAction} />}
         </div>
@@ -99,10 +121,7 @@ export default function Dashboard() {
         {/* Row 2: Impact Metrics */}
         <ImpactMetrics metrics={metrics} />
 
-        {/* Row 3: Activity Feed */}
-        <LiveActivityFeed actions={actions} />
-
-        {/* Subnav tabs — below activity feed */}
+        {/* Subnav tabs — now above cards, below metrics */}
         <nav className="flex items-center gap-1 border-b border-border/20 pb-0">
           <button
             onClick={() => setActiveTab("flights")}
@@ -130,16 +149,9 @@ export default function Dashboard() {
               <span className="absolute bottom-0 left-2 right-2 h-0.5 bg-primary rounded-full" />
             )}
           </button>
-          <button
-            disabled
-            className="px-4 py-2.5 text-sm font-medium text-muted-foreground/40 cursor-not-allowed"
-          >
-            Activities
-            <span className="ml-1.5 text-[10px] font-mono uppercase">Soon</span>
-          </button>
         </nav>
 
-        {/* Tab Content */}
+        {/* Tab Content — cards + controls */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
           {activeTab === "flights" ? (
             <>
@@ -155,8 +167,18 @@ export default function Dashboard() {
                 />
               </div>
               <div className="lg:col-span-4 space-y-4">
-                <Controls key="flights" activeTab="flights" agentState={agentState} onReoptimize={tripStore.reoptimize} onSetAgentState={setAgentState} />
-                <FlightPreferences initial={mockPreferences} />
+                <Controls
+                  key="flights"
+                  activeTab="flights"
+                  agentState={agentState}
+                  onReoptimize={tripStore.reoptimize}
+                  onSetAgentState={setAgentState}
+                  onAddAction={addAction}
+                />
+                <FlightPreferences
+                  initial={mockPreferences}
+                  onReoptimize={(strategy) => tripStore.reoptimize("flight", strategy)}
+                />
               </div>
             </>
           ) : (
@@ -173,7 +195,14 @@ export default function Dashboard() {
                 />
               </div>
               <div className="lg:col-span-4 space-y-4">
-                <Controls key="lodging" activeTab="lodging" agentState={agentState} onReoptimize={tripStore.reoptimize} onSetAgentState={setAgentState} />
+                <Controls
+                  key="lodging"
+                  activeTab="lodging"
+                  agentState={agentState}
+                  onReoptimize={tripStore.reoptimize}
+                  onSetAgentState={setAgentState}
+                  onAddAction={addAction}
+                />
                 <LodgingPreferences
                   initial={mockPreferences}
                   destination={tripStore.activeTrip.destination}
@@ -182,11 +211,15 @@ export default function Dashboard() {
                       tripStore.reoptimize("lodging", `area priority: ${neighborhoods[0]}`);
                     }
                   }}
+                  onReoptimize={(strategy) => tripStore.reoptimize("lodging", strategy)}
                 />
               </div>
             </>
           )}
         </div>
+
+        {/* Activity Feed — at the bottom, supporting evidence */}
+        <LiveActivityFeed actions={actions} />
       </main>
     </div>
   );

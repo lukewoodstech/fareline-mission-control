@@ -90,23 +90,23 @@ export default function OptionActions({
             </span>
           </div>
         </div>
-        <div className="flex items-center justify-between">
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <a
-                href={bookingUrl ?? "#"}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-xs text-primary hover:underline flex items-center gap-1 font-medium"
-              >
-                <ExternalLink className="h-3 w-3" />
-                Book on {category === "flight" ? "airline" : "hotel"} site
-              </a>
-            </TooltipTrigger>
-            <TooltipContent side="top" className="text-xs">
-              Opens external booking page
-            </TooltipContent>
-          </Tooltip>
+        <div className="flex items-center justify-between gap-2">
+          {/* Promoted Book CTA */}
+          <Button
+            variant="default"
+            size="sm"
+            className="h-8 text-xs px-4 font-medium gap-1.5"
+            asChild
+          >
+            <a
+              href={bookingUrl ?? "#"}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <ExternalLink className="h-3.5 w-3.5" />
+              Book on {category === "flight" ? "airline" : "hotel"} site
+            </a>
+          </Button>
           <div className="flex items-center gap-2">
             <button
               onClick={onToggleMonitor}

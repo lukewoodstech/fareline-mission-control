@@ -1,14 +1,19 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import type { FlightOption, OptionDecision } from "@/types/travel";
 import { Plane, Clock, ArrowRight, Check } from "lucide-react";
 import OptionActions from "./OptionActions";
 
-const tagLabels: Record<string, string> = {
-  "Best Value": "Best Value — based on your preferences",
-  "Fastest": "Fastest option found so far",
-  "Most Flexible": "Most Flexible — change-friendly fare",
+const tagTooltips: Record<string, string> = {
+  "Best Value": "Lowest cost per quality based on your preferences",
+  "Fastest": "Shortest total travel time found so far",
+  "Most Flexible": "Change-friendly fare with free cancellation",
 };
 
 const tagVariant: Record<string, "success" | "accent" | "status"> = {
@@ -91,9 +96,18 @@ export default function BestFlights({
                   {isSelected && <Check className="h-3.5 w-3.5 text-success" />}
                   <span className="font-semibold text-sm">{f.airline}</span>
                   {f.tag && (
-                    <Badge variant={tagVariant[f.tag]} className="text-[10px]">
-                      {tagLabels[f.tag] ?? f.tag}
-                    </Badge>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span>
+                          <Badge variant={tagVariant[f.tag]} className="text-[10px] cursor-help">
+                            {f.tag}
+                          </Badge>
+                        </span>
+                      </TooltipTrigger>
+                      <TooltipContent side="top" className="text-xs max-w-[200px]">
+                        {tagTooltips[f.tag]}
+                      </TooltipContent>
+                    </Tooltip>
                   )}
                 </div>
                 <span className="text-lg font-bold font-mono text-primary">${f.price}</span>
