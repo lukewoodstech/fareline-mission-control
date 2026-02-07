@@ -22,6 +22,8 @@ import {
   initialActions,
   demoAgentStates,
   demoNewActions,
+  replacementFlights,
+  replacementLodging,
 } from "@/data/mockData";
 
 export function useDemoDashboard() {
@@ -36,6 +38,8 @@ export function useDemoDashboard() {
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const stateIndexRef = useRef(0);
   const actionIndexRef = useRef(0);
+  const replacementFlightIdx = useRef(0);
+  const replacementLodgingIdx = useRef(0);
 
   // ── Client-side overlay state ──
   const [decisions, setDecisions] = useState<OptionDecision[]>([]);
@@ -50,8 +54,8 @@ export function useDemoDashboard() {
   }, [activeTrip]);
 
   const trip: Trip | null = useMemo(() => (activeTrip ? { ...activeTrip, budget } : null), [activeTrip, budget]);
-  const flights: FlightOption[] = mockFlights;
-  const lodging: LodgingOption[] = mockLodging;
+  const [flights, setFlights] = useState<FlightOption[]>(mockFlights);
+  const [lodging, setLodging] = useState<LodgingOption[]>(mockLodging);
 
   // ── Demo event simulation (every 5–10s) ──
   const addDemoEvent = useCallback(() => {
@@ -184,19 +188,82 @@ export function useDemoDashboard() {
 
   const reoptimize = useCallback(
     (category: "flight" | "lodging", strategy: string) => {
+      // Mark non-selected options as replacing
+      const currentIds =
+        category === "flight"
+          ? flights.filter((f) => f.id !== selectedFlightId).map((f) => f.id)
+          : lodging.filter((l) => l.id !== selectedLodgingId).map((l) => l.id);
+
+      setDecisions((prev) => {
+        const filtered = prev.filter((d) => !currentIds.includes(d.optionId));
+        return [
+          ...filtered,
+          ...currentIds.map((id) => ({
+            optionId: id,
+            category,
+            status: "replacing" as const,
+            timestamp: new Date().toISOString(),
+          })),
+        ];
+      });
+
       setAgentStateRaw(
         category === "flight" ? "Re-optimizing (Flights)" : "Re-optimizing (Lodging)",
       );
+
       addAction({
         id: `act-reopt-${Date.now()}`,
         timestamp: new Date().toISOString(),
         type: "optimize",
         summary: `Re-optimizing ${category}s — ${strategy}`,
-        detail: `Requesting the agent to find better ${category} options.`,
+        detail: `TripMaster is replacing current ${category} options based on the "${strategy}" strategy.`,
         smsSent: false,
       });
+
+      // Simulate replacement after delay
+      setTimeout(() => {
+        if (category === "flight") {
+          setFlights((prev) =>
+            prev.map((f) => {
+              if (f.id === selectedFlightId) return f;
+              const idx = replacementFlightIdx.current % replacementFlights.length;
+              const replacement = {
+                ...replacementFlights[idx],
+                id: `fl-rep-${Date.now()}-${idx}`,
+              };
+              replacementFlightIdx.current += 1;
+              return replacement;
+            }),
+          );
+        } else {
+          setLodging((prev) =>
+            prev.map((l) => {
+              if (l.id === selectedLodgingId) return l;
+              const idx = replacementLodgingIdx.current % replacementLodging.length;
+              const replacement = {
+                ...replacementLodging[idx],
+                id: `lg-rep-${Date.now()}-${idx}`,
+              };
+              replacementLodgingIdx.current += 1;
+              return replacement;
+            }),
+          );
+        }
+
+        setDecisions((prev) => prev.filter((d) => !currentIds.includes(d.optionId)));
+        setAgentStateRaw("Monitoring");
+
+        addAction({
+          id: `act-reopt-done-${Date.now()}`,
+          timestamp: new Date().toISOString(),
+          type: "optimize",
+          summary: `Found new ${category} options — ${strategy}`,
+          detail: `Replaced ${currentIds.length} options with better matches.`,
+          smsSent: false,
+        });
+      }, 1800);
     },
-    [addAction],
+    [flights, lodging, selectedFlightId, selectedLodgingId, addAction],
   );
 
   const updateBudget = useCallback((n: number) => setBudget(n), []);
