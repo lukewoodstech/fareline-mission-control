@@ -164,9 +164,9 @@ export default function OptionActions({
             Select
           </Button>
           <Button
-            variant="ghost"
+            variant="outline"
             size="sm"
-            className="h-8 text-xs px-3 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+            className="h-8 text-xs px-3 border-destructive/30 text-destructive/80 hover:text-destructive hover:bg-destructive/10 hover:border-destructive/50"
             onClick={handleRejectClick}
           >
             <ThumbsDown className="h-3.5 w-3.5 mr-1.5" />
