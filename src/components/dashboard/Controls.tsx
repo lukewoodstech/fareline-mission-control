@@ -34,7 +34,8 @@ export default function Controls({
   onSetAgentState,
 }: ControlsProps) {
   const [smsSending, setSmsSending] = useState(false);
-  const [alertThreshold, setAlertThreshold] = useState("");
+  const [alertInput, setAlertInput] = useState("");
+  const [savedThreshold, setSavedThreshold] = useState<number | null>(null);
   const [alertOpen, setAlertOpen] = useState(false);
 
   const isPaused = agentState === "Paused";
@@ -57,13 +58,14 @@ export default function Controls({
   };
 
   const handleAlertSave = () => {
-    const value = Number(alertThreshold);
+    const value = Number(alertInput);
     if (!value || value <= 0) return;
+    setSavedThreshold(value);
     setAlertOpen(false);
     toast.success("Alert threshold updated. We'll notify you when this condition is met.", {
       position: "top-center",
     });
-    setAlertThreshold("");
+    setAlertInput("");
   };
 
   const handleSmsRequest = () => {
@@ -141,8 +143,19 @@ export default function Controls({
             >
               <BellRing className="h-4 w-4 mr-3 shrink-0 text-muted-foreground group-hover:text-primary transition-colors" />
               <div className="text-left flex-1">
-                <p className="text-sm font-medium">Set alert threshold</p>
-                <p className="text-xs text-muted-foreground font-normal">Customize price alerts</p>
+                <div className="flex items-center gap-2">
+                  <p className="text-sm font-medium">Set alert threshold</p>
+                  {savedThreshold !== null && (
+                    <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-primary/15 text-primary">
+                      &lt; ${savedThreshold}
+                    </span>
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground font-normal">
+                  {savedThreshold !== null
+                    ? `Alert when below $${savedThreshold}`
+                    : "Customize price alerts"}
+                </p>
                 <p className="text-[10px] text-muted-foreground/60 font-normal mt-0.5">Get notified on drops</p>
               </div>
             </Button>
@@ -152,26 +165,47 @@ export default function Controls({
             <p className="text-xs text-muted-foreground">
               Notify me if {activeTab === "flights" ? "a flight" : "lodging"} price drops below:
             </p>
+            {savedThreshold !== null && (
+              <p className="text-xs text-primary font-mono">
+                Current: &lt; ${savedThreshold}
+              </p>
+            )}
             <div className="flex items-center gap-2">
               <span className="text-sm font-mono text-muted-foreground">$</span>
               <Input
                 type="number"
                 min={1}
-                placeholder="e.g. 150"
-                value={alertThreshold}
-                onChange={(e) => setAlertThreshold(e.target.value)}
+                placeholder={savedThreshold ? `${savedThreshold}` : "e.g. 150"}
+                value={alertInput}
+                onChange={(e) => setAlertInput(e.target.value)}
                 className="h-8 text-sm font-mono"
                 onKeyDown={(e) => e.key === "Enter" && handleAlertSave()}
               />
             </div>
-            <Button
-              size="sm"
-              className="w-full h-8 text-xs"
-              disabled={!alertThreshold || Number(alertThreshold) <= 0}
-              onClick={handleAlertSave}
-            >
-              Save threshold
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                size="sm"
+                className="flex-1 h-8 text-xs"
+                disabled={!alertInput || Number(alertInput) <= 0}
+                onClick={handleAlertSave}
+              >
+                Save threshold
+              </Button>
+              {savedThreshold !== null && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 text-xs text-muted-foreground hover:text-destructive"
+                  onClick={() => {
+                    setSavedThreshold(null);
+                    setAlertOpen(false);
+                    toast.success("Alert threshold removed.", { position: "top-center" });
+                  }}
+                >
+                  Clear
+                </Button>
+              )}
+            </div>
           </PopoverContent>
         </Popover>
 
