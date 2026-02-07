@@ -9,9 +9,11 @@ const stateConfig: Record<AgentState, { icon: React.ElementType; color: string; 
   "Initializing": { icon: Loader2, color: "text-primary", badgeVariant: "status", phase: "Scanning", taskText: "Connecting to booking sources…" },
   "Searching Flights": { icon: Search, color: "text-primary", badgeVariant: "status", phase: "Scanning", taskText: "Scanning airlines and fare classes…" },
   "Searching Lodging": { icon: Search, color: "text-primary", badgeVariant: "status", phase: "Filtering", taskText: "Filtering lodging by your preferences…" },
+  "Searching Activities": { icon: Search, color: "text-primary", badgeVariant: "status", phase: "Scanning", taskText: "Discovering activities for your trip…" },
   "Re-optimizing": { icon: Loader2, color: "text-accent", badgeVariant: "accent", phase: "Ranking", taskText: "Re-ranking options with new criteria…" },
   "Re-optimizing (Flights)": { icon: Loader2, color: "text-accent", badgeVariant: "accent", phase: "Comparing", taskText: "Comparing nonstop flight options…" },
   "Re-optimizing (Lodging)": { icon: Loader2, color: "text-accent", badgeVariant: "accent", phase: "Comparing", taskText: "Comparing lodging alternatives…" },
+  "Re-optimizing (Activities)": { icon: Loader2, color: "text-accent", badgeVariant: "accent", phase: "Comparing", taskText: "Curating better activities for you…" },
   "Waiting for Approval": { icon: CheckCircle2, color: "text-accent", badgeVariant: "accent", phase: "Awaiting", taskText: "Waiting for your decision…" },
   "Monitoring": { icon: Eye, color: "text-success", badgeVariant: "success", phase: "Monitoring", taskText: "Watching for price drops and new deals" },
   "Paused": { icon: PauseCircle, color: "text-muted-foreground", badgeVariant: "muted", phase: "Paused", taskText: "Monitoring paused" },
@@ -27,7 +29,7 @@ interface AgentStatusProps {
 export default function AgentStatus({ state, trip }: AgentStatusProps) {
   const config = stateConfig[state];
   const Icon = config.icon;
-  const isAnimating = ["Initializing", "Searching Flights", "Searching Lodging", "Re-optimizing", "Re-optimizing (Flights)", "Re-optimizing (Lodging)"].includes(state);
+  const isAnimating = ["Initializing", "Searching Flights", "Searching Lodging", "Searching Activities", "Re-optimizing", "Re-optimizing (Flights)", "Re-optimizing (Lodging)", "Re-optimizing (Activities)"].includes(state);
   const [elapsed, setElapsed] = useState(0);
 
   useEffect(() => {
