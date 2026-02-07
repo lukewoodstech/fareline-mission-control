@@ -1,12 +1,14 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Plane, ArrowLeft, MessageSquare, MapPin, Loader2, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { useLiveDashboard } from "@/hooks/useLiveDashboard";
+import { useDemoDashboard } from "@/hooks/useDemoDashboard";
 import { useActivityStore } from "@/hooks/useActivityStore";
 import { mockPreferences } from "@/data/mockData";
+import DemoToggle from "@/components/dashboard/DemoToggle";
 
 import AgentStatus from "@/components/dashboard/AgentStatus";
 import LastAgentAction from "@/components/dashboard/LastAgentAction";
@@ -28,8 +30,25 @@ type DashboardTab = "flights" | "lodging" | "activities";
 
 export default function Dashboard() {
   const [activeTab, setActiveTab] = useState<DashboardTab>("flights");
+  const [isDemo, setIsDemo] = useState(true); // Default to demo in Lovable preview
 
-  const dashboard = useLiveDashboard();
+  // Both hooks are always called (Rules of Hooks), but live is disabled in demo mode
+  const live = useLiveDashboard(!isDemo);
+  const demo = useDemoDashboard();
+
+  // Auto-switch to demo if live API fails (backend unreachable)
+  useEffect(() => {
+    if (!isDemo && live.error) {
+      setIsDemo(true);
+      toast.info("Backend unreachable — switched to demo mode", {
+        position: "top-center",
+      });
+    }
+  }, [isDemo, live.error]);
+
+  // Pick the active data source
+  const dashboard = isDemo ? demo : live;
+
   const activityStore = useActivityStore(dashboard.addAction, dashboard.setAgentState);
 
   const lastAction = dashboard.actions[0];
@@ -103,19 +122,20 @@ export default function Dashboard() {
               onSwitchTrip={() => {}}
             />
           </div>
+          <DemoToggle isDemo={isDemo} onToggle={setIsDemo} />
         </div>
       </header>
 
-      {/* Loading state */}
-      {dashboard.isLoading ? (
+      {/* Loading state (only in live mode) */}
+      {!isDemo && dashboard.isLoading ? (
         <main className="container mx-auto px-4 py-6 flex items-center justify-center min-h-[calc(100vh-3.5rem)]">
           <div className="text-center space-y-4 animate-fade-in">
             <Loader2 className="h-10 w-10 text-primary animate-spin mx-auto" />
             <p className="text-muted-foreground">Connecting to TripMaster agent…</p>
           </div>
         </main>
-      ) : dashboard.error ? (
-        /* Error state */
+      ) : !isDemo && dashboard.error ? (
+        /* Error state (only in live mode) */
         <main className="container mx-auto px-4 py-6 flex items-center justify-center min-h-[calc(100vh-3.5rem)]">
           <div className="text-center space-y-4 max-w-md animate-fade-in">
             <div className="mx-auto h-16 w-16 rounded-2xl bg-destructive/10 flex items-center justify-center">
@@ -125,12 +145,17 @@ export default function Dashboard() {
               <h2 className="text-xl font-bold">Connection Error</h2>
               <p className="text-sm text-muted-foreground">{dashboard.error}</p>
             </div>
-            <Button variant="outline" onClick={() => window.location.reload()}>
-              Retry
-            </Button>
+            <div className="flex gap-2 justify-center">
+              <Button variant="outline" onClick={() => window.location.reload()}>
+                Retry
+              </Button>
+              <Button onClick={() => setIsDemo(true)}>
+                Switch to Demo
+              </Button>
+            </div>
           </div>
         </main>
-      ) : !hasTrip ? (
+      ) : !hasTrip && !isDemo ? (
         /* Empty state — no active trip from backend */
         <main className="container mx-auto px-4 py-6 flex items-center justify-center min-h-[calc(100vh-3.5rem)]">
           <div className="text-center space-y-6 max-w-md mx-auto animate-fade-in">
@@ -145,10 +170,13 @@ export default function Dashboard() {
                 will appear here automatically.
               </p>
             </div>
+            <Button variant="outline" onClick={() => setIsDemo(true)}>
+              Try Demo Mode
+            </Button>
           </div>
         </main>
       ) : (
-        /* Dashboard grid — live data */
+        /* Dashboard grid — live or demo data */
         <main className="container mx-auto px-4 py-6 space-y-6">
           {/* Trip status banner */}
           {bothSelected && (
