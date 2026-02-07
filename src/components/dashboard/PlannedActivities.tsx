@@ -77,8 +77,8 @@ export default function PlannedActivities({
           const catColor = categoryColors[p.activity.category];
 
           const mapsUrl = p.activity.gps_coordinates
-            ? `https://www.google.com/maps/search/?api=1&query=${p.activity.gps_coordinates.latitude},${p.activity.gps_coordinates.longitude}`
-            : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.activity.title + " " + p.activity.address)}`;
+            ? `https://www.google.com/maps?q=${p.activity.gps_coordinates.latitude},${p.activity.gps_coordinates.longitude}`
+            : `https://www.google.com/maps?q=${encodeURIComponent(p.activity.title + ", " + p.activity.address)}`;
 
           return (
             <div

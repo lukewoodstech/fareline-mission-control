@@ -176,8 +176,8 @@ function ActivityCard({
   };
 
   const mapsUrl = activity.gps_coordinates
-    ? `https://www.google.com/maps/search/?api=1&query=${activity.gps_coordinates.latitude},${activity.gps_coordinates.longitude}`
-    : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(activity.title + " " + activity.address)}`;
+    ? `https://www.google.com/maps?q=${activity.gps_coordinates.latitude},${activity.gps_coordinates.longitude}`
+    : `https://www.google.com/maps?q=${encodeURIComponent(activity.title + ", " + activity.address)}`;
 
   return (
     <div className="rounded-lg p-3.5 bg-elevated/50 hover:bg-elevated/80 hover:shadow-sm transition-all duration-200 animate-fade-in-card">
@@ -187,6 +187,7 @@ function ActivityCard({
           <img
             src={activity.thumbnail}
             alt={activity.title}
+            referrerPolicy="no-referrer"
             className="h-16 w-20 rounded-lg object-cover shrink-0 bg-secondary"
           />
         ) : (
