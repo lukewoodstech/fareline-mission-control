@@ -24,6 +24,7 @@ interface TripStore {
   switchTrip: (tripId: string) => void;
   createTrip: (trip: Omit<Trip, "id" | "status">) => void;
   selectOption: (optionId: string, category: "flight" | "lodging") => void;
+  unselectOption: (optionId: string, category: "flight" | "lodging") => void;
   rejectOption: (optionId: string, category: "flight" | "lodging", reason: string) => void;
   toggleMonitor: (optionId: string) => void;
   getDecision: (optionId: string) => OptionDecision | undefined;
@@ -85,7 +86,6 @@ export function useTripStore(
       };
       onAddAction(action);
 
-      // Simulate agent initialization
       onSetAgentState("Initializing");
       setTimeout(() => onSetAgentState("Searching Flights"), 2000);
       setTimeout(() => {
@@ -94,7 +94,7 @@ export function useTripStore(
           id: `act-search-${Date.now()}`,
           timestamp: new Date().toISOString(),
           type: "search",
-          summary: `Initiated search for ${tripData.origin} → ${tripData.destination}`,
+          summary: `TripMaster initiated search for ${tripData.origin} → ${tripData.destination}`,
           detail: `Scanning flights and lodging for your trip.`,
           smsSent: false,
         };
@@ -108,7 +108,6 @@ export function useTripStore(
   const selectOption = useCallback(
     (optionId: string, category: "flight" | "lodging") => {
       setDecisions((prev) => {
-        // Remove any existing selection for this category
         const filtered = prev.filter(
           (d) => !(d.category === category && d.status === "selected"),
         );
@@ -124,7 +123,6 @@ export function useTripStore(
         ];
       });
 
-      // Check if both are now selected
       const otherCategory = category === "flight" ? "lodging" : "flight";
       const otherSelected = decisions.find(
         (d) => d.category === otherCategory && d.status === "selected",
@@ -139,9 +137,34 @@ export function useTripStore(
     [decisions, activeTripId],
   );
 
+  const unselectOption = useCallback(
+    (optionId: string, category: "flight" | "lodging") => {
+      setDecisions((prev) => prev.filter((d) => d.optionId !== optionId));
+
+      // If trip was locked, downgrade back to monitoring
+      setTrips((prev) =>
+        prev.map((t) =>
+          t.id === activeTripId && t.status === "Locked"
+            ? { ...t, status: "Monitoring" as const }
+            : t,
+        ),
+      );
+
+      const action: AgentAction = {
+        id: `act-unselect-${Date.now()}`,
+        timestamp: new Date().toISOString(),
+        type: "optimize",
+        summary: `${category === "flight" ? "Flight" : "Lodging"} selection cleared`,
+        detail: `TripMaster is ready to help you pick a new ${category} option.`,
+        smsSent: false,
+      };
+      onAddAction(action);
+    },
+    [activeTripId, onAddAction],
+  );
+
   const rejectOption = useCallback(
     (optionId: string, category: "flight" | "lodging", reason: string) => {
-      // Mark as replacing
       setDecisions((prev) => [
         ...prev.filter((d) => d.optionId !== optionId),
         {
@@ -162,12 +185,11 @@ export function useTripStore(
         timestamp: new Date().toISOString(),
         type: "reject",
         summary: `Rejected ${category} option — "${reason}"`,
-        detail: `User declined an option. Agent is finding a replacement based on the feedback.`,
+        detail: `User declined an option. TripMaster is finding a replacement based on the feedback.`,
         smsSent: false,
       };
       onAddAction(rejectAction);
 
-      // Simulate replacement after delay
       setTimeout(() => {
         if (category === "flight") {
           const idx = replacementFlightIdx.current % replacementFlights.length;
@@ -189,7 +211,6 @@ export function useTripStore(
           setLodging((prev) => prev.map((l) => (l.id === optionId ? replacement : l)));
         }
 
-        // Remove the replacing decision
         setDecisions((prev) => prev.filter((d) => d.optionId !== optionId));
         onSetAgentState("Monitoring");
 
@@ -224,6 +245,7 @@ export function useTripStore(
     switchTrip,
     createTrip,
     selectOption,
+    unselectOption,
     rejectOption,
     toggleMonitor,
     getDecision,

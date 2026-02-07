@@ -18,6 +18,7 @@ interface BestLodgingProps {
   onSelect: (id: string) => void;
   onReject: (id: string, reason: string) => void;
   onToggleMonitor: (id: string) => void;
+  onUnselect: (id: string) => void;
 }
 
 export default function BestLodging({
@@ -27,6 +28,7 @@ export default function BestLodging({
   onSelect,
   onReject,
   onToggleMonitor,
+  onUnselect,
 }: BestLodgingProps) {
   return (
     <Card>
@@ -47,7 +49,7 @@ export default function BestLodging({
             return (
               <div
                 key={l.id}
-                className="rounded-lg border border-border bg-secondary/30 p-4 space-y-3"
+                className="rounded-lg bg-secondary/20 p-4 space-y-3"
               >
                 <div className="flex items-center justify-between">
                   <Skeleton className="h-4 w-32" />
@@ -57,7 +59,7 @@ export default function BestLodging({
                 <Skeleton className="h-3 w-36" />
                 <Skeleton className="h-3 w-24" />
                 <p className="text-xs text-muted-foreground animate-pulse-glow">
-                  Finding a better option…
+                  TripMaster is finding a better option…
                 </p>
               </div>
             );
@@ -66,12 +68,12 @@ export default function BestLodging({
           return (
             <div
               key={l.id}
-              className={`rounded-lg border p-4 transition-all ${
+              className={`rounded-lg p-4 transition-all ${
                 isSelected
-                  ? "border-success/50 bg-success/5 ring-1 ring-success/20"
+                  ? "bg-primary/5 ring-1 ring-primary/30 shadow-sm shadow-primary/10"
                   : isDeemphasized
-                  ? "border-border bg-secondary/10 opacity-60"
-                  : "border-border bg-secondary/30 hover:border-primary/30"
+                  ? "bg-secondary/10 opacity-50"
+                  : "bg-elevated/50 hover:bg-elevated/80"
               }`}
             >
               <div className="flex items-center justify-between mb-3">
@@ -116,6 +118,7 @@ export default function BestLodging({
                 onSelect={() => onSelect(l.id)}
                 onReject={(reason) => onReject(l.id, reason)}
                 onToggleMonitor={() => onToggleMonitor(l.id)}
+                onUnselect={() => onUnselect(l.id)}
               />
             </div>
           );

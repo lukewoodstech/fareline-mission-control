@@ -70,10 +70,10 @@ export default function NewTripModal({ open, onOpenChange, onCreateTrip }: NewTr
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Plane className="h-4 w-4 text-primary" />
-            New Trip
+            Create a new trip
           </DialogTitle>
           <DialogDescription>
-            Tell the agent where you're headed. It'll start searching immediately.
+            Tell TripMaster where you're headed. It'll start searching immediately.
           </DialogDescription>
         </DialogHeader>
 

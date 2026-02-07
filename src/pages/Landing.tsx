@@ -56,13 +56,13 @@ export default function Landing() {
   return (
     <div className="min-h-screen bg-background">
       {/* Nav */}
-      <nav className="border-b border-border/50 backdrop-blur-sm sticky top-0 z-50 bg-background/80">
+      <nav className="border-b border-border/30 backdrop-blur-sm sticky top-0 z-50 bg-background/80">
         <div className="container mx-auto flex items-center justify-between h-16 px-4">
           <div className="flex items-center gap-2">
             <div className="h-8 w-8 rounded-lg bg-primary/20 flex items-center justify-center">
               <Plane className="h-4 w-4 text-primary" />
             </div>
-            <span className="text-lg font-bold tracking-tight">Fareline</span>
+            <span className="text-lg font-bold tracking-tight">TripMaster</span>
           </div>
           <Link to="/dashboard">
             <Button variant="ghost" size="sm">
@@ -106,7 +106,7 @@ export default function Landing() {
       </section>
 
       {/* Stats row */}
-      <section className="border-y border-border/50 bg-card/50">
+      <section className="border-y border-border/30 bg-card/50">
         <div className="container mx-auto px-4 py-8">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {features.map((f) => (
@@ -127,7 +127,7 @@ export default function Landing() {
       {/* How it works */}
       <section className="container mx-auto px-4 py-24">
         <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">How Fareline works</h2>
+          <h2 className="text-3xl md:text-4xl font-bold mb-4">How TripMaster works</h2>
           <p className="text-muted-foreground text-lg max-w-xl mx-auto">
             From text message to booked trip — in four simple steps.
           </p>
@@ -137,7 +137,7 @@ export default function Landing() {
           {steps.map((step, i) => (
             <div
               key={step.title}
-              className="relative rounded-xl border border-border bg-card p-6 hover:border-primary/40 transition-colors group"
+              className="relative rounded-xl bg-card p-6 shadow-md shadow-black/10 hover:shadow-lg hover:shadow-primary/5 transition-all group"
             >
               <div className="flex items-center gap-3 mb-4">
                 <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
@@ -158,11 +158,11 @@ export default function Landing() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-border/50 py-8">
+      <footer className="border-t border-border/30 py-8">
         <div className="container mx-auto px-4 flex items-center justify-between text-sm text-muted-foreground">
           <div className="flex items-center gap-2">
             <Plane className="h-3 w-3 text-primary" />
-            <span>Fareline</span>
+            <span>TripMaster</span>
           </div>
           <span>Demo · Not a real product (yet)</span>
         </div>

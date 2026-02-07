@@ -14,7 +14,7 @@ interface LastAgentActionProps {
 
 export default function LastAgentAction({ action }: LastAgentActionProps) {
   return (
-    <Card className="h-full border-primary/20 glow-primary">
+    <Card className="h-full glow-primary">
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
