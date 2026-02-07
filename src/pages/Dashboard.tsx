@@ -72,45 +72,6 @@ export default function Dashboard() {
         </div>
       </header>
 
-      {/* Subnav tabs */}
-      <nav className="border-b border-border/20 bg-card/40 backdrop-blur-sm sticky top-14 z-40">
-        <div className="container mx-auto px-4 flex items-center gap-1 h-11">
-          <button
-            onClick={() => setActiveTab("flights")}
-            className={`relative px-4 py-2 text-sm font-medium transition-colors rounded-md ${
-              activeTab === "flights"
-                ? "text-primary"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            Flights
-            {activeTab === "flights" && (
-              <span className="absolute bottom-0 left-2 right-2 h-0.5 bg-primary rounded-full" />
-            )}
-          </button>
-          <button
-            onClick={() => setActiveTab("lodging")}
-            className={`relative px-4 py-2 text-sm font-medium transition-colors rounded-md ${
-              activeTab === "lodging"
-                ? "text-primary"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            Lodging
-            {activeTab === "lodging" && (
-              <span className="absolute bottom-0 left-2 right-2 h-0.5 bg-primary rounded-full" />
-            )}
-          </button>
-          <button
-            disabled
-            className="px-4 py-2 text-sm font-medium text-muted-foreground/40 cursor-not-allowed"
-          >
-            Activities
-            <span className="ml-1.5 text-[10px] font-mono uppercase">Soon</span>
-          </button>
-        </div>
-      </nav>
-
       {/* Dashboard grid */}
       <main className="container mx-auto px-4 py-6 space-y-6">
         {/* Trip status banner */}
@@ -141,7 +102,44 @@ export default function Dashboard() {
         {/* Row 3: Activity Feed */}
         <LiveActivityFeed actions={actions} />
 
-        {/* Row 4: Tab Content */}
+        {/* Subnav tabs — below activity feed */}
+        <nav className="flex items-center gap-1 border-b border-border/20 pb-0">
+          <button
+            onClick={() => setActiveTab("flights")}
+            className={`relative px-4 py-2.5 text-sm font-medium transition-colors ${
+              activeTab === "flights"
+                ? "text-primary"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            Flights
+            {activeTab === "flights" && (
+              <span className="absolute bottom-0 left-2 right-2 h-0.5 bg-primary rounded-full" />
+            )}
+          </button>
+          <button
+            onClick={() => setActiveTab("lodging")}
+            className={`relative px-4 py-2.5 text-sm font-medium transition-colors ${
+              activeTab === "lodging"
+                ? "text-primary"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            Lodging
+            {activeTab === "lodging" && (
+              <span className="absolute bottom-0 left-2 right-2 h-0.5 bg-primary rounded-full" />
+            )}
+          </button>
+          <button
+            disabled
+            className="px-4 py-2.5 text-sm font-medium text-muted-foreground/40 cursor-not-allowed"
+          >
+            Activities
+            <span className="ml-1.5 text-[10px] font-mono uppercase">Soon</span>
+          </button>
+        </nav>
+
+        {/* Tab Content */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
           {activeTab === "flights" ? (
             <>
