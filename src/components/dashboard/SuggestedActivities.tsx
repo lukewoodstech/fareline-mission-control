@@ -9,38 +9,35 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import type { ActivityOption, ActivityRejectReason } from "@/types/travel";
+import type { ActivityOption, ActivityCategory, ActivityRejectReason } from "@/types/travel";
 import type { ActivityDecision } from "@/hooks/useActivityStore";
 import {
   Sparkles,
-  Clock,
-  CalendarDays,
+  Star,
   ExternalLink,
   Check,
   ThumbsDown,
   UtensilsCrossed,
-  TreePine,
-  Palette,
-  PartyPopper,
-  Leaf,
+  Mountain,
+  Camera,
+  Ticket,
   MapPin,
 } from "lucide-react";
 
 const REJECT_REASONS: ActivityRejectReason[] = [
   "Not interested",
   "Too expensive",
+  "Too far",
+  "Bad reviews",
   "Wrong vibe",
-  "Too long",
-  "Bad timing",
   "Already planned something similar",
 ];
 
-const categoryConfig = {
-  Food: { icon: UtensilsCrossed, color: "text-orange-400", bg: "bg-orange-400/10" },
-  Outdoor: { icon: TreePine, color: "text-emerald-400", bg: "bg-emerald-400/10" },
-  Culture: { icon: Palette, color: "text-violet-400", bg: "bg-violet-400/10" },
-  Event: { icon: PartyPopper, color: "text-amber-400", bg: "bg-amber-400/10" },
-  Relaxation: { icon: Leaf, color: "text-sky-400", bg: "bg-sky-400/10" },
+const categoryConfig: Record<ActivityCategory, { icon: typeof UtensilsCrossed; color: string; bg: string }> = {
+  Restaurant: { icon: UtensilsCrossed, color: "text-orange-400", bg: "bg-orange-400/10" },
+  Hike: { icon: Mountain, color: "text-emerald-400", bg: "bg-emerald-400/10" },
+  Sightseeing: { icon: Camera, color: "text-violet-400", bg: "bg-violet-400/10" },
+  Activity: { icon: Ticket, color: "text-amber-400", bg: "bg-amber-400/10" },
 };
 
 const tagVariant: Record<string, "success" | "accent" | "status"> = {
@@ -48,6 +45,8 @@ const tagVariant: Record<string, "success" | "accent" | "status"> = {
   "Local Gem": "accent",
   "Must Do": "status",
 };
+
+type FilterKey = "All" | ActivityCategory;
 
 interface SuggestedActivitiesProps {
   activities: ActivityOption[];
@@ -62,21 +61,50 @@ export default function SuggestedActivities({
   onSelect,
   onReject,
 }: SuggestedActivitiesProps) {
+  const [filter, setFilter] = useState<FilterKey>("All");
+
+  const filters: FilterKey[] = ["All", "Restaurant", "Hike", "Sightseeing", "Activity"];
+  const filtered = filter === "All" ? activities : activities.filter((a) => a.category === filter);
+
   return (
     <Card>
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
             <Sparkles className="h-4 w-4" />
-            Suggested Activities
+            Suggested Activities & Food
           </CardTitle>
           <span className="text-[11px] text-muted-foreground">
-            Curated for your trip
+            {filtered.length} results
           </span>
+        </div>
+        {/* Category filter chips */}
+        <div className="flex flex-wrap gap-1.5 mt-2">
+          {filters.map((f) => {
+            const count = f === "All" ? activities.length : activities.filter((a) => a.category === f).length;
+            return (
+              <button
+                key={f}
+                onClick={() => setFilter(f)}
+                className={`text-xs px-2.5 py-1 rounded-md transition-colors cursor-pointer ${
+                  filter === f
+                    ? "bg-primary/15 text-primary font-medium"
+                    : "bg-secondary text-muted-foreground hover:text-foreground hover:bg-secondary/80"
+                }`}
+              >
+                {f} ({count})
+              </button>
+            );
+          })}
         </div>
       </CardHeader>
       <CardContent className="space-y-3">
-        {activities.map((a) => {
+        {filtered.length === 0 && (
+          <p className="text-sm text-muted-foreground text-center py-4">
+            No suggestions in this category
+          </p>
+        )}
+        {filtered.map((a) => {
           const decision = getDecision(a.id);
           const isReplacing = decision?.status === "replacing";
 
@@ -86,14 +114,16 @@ export default function SuggestedActivities({
                 key={a.id}
                 className="rounded-lg bg-secondary/20 p-3.5 space-y-2.5 animate-pulse"
               >
-                <div className="flex items-center justify-between">
-                  <Skeleton className="h-4 w-40" />
-                  <Skeleton className="h-5 w-14" />
+                <div className="flex gap-3">
+                  <Skeleton className="h-16 w-20 rounded-lg shrink-0" />
+                  <div className="flex-1 space-y-2">
+                    <Skeleton className="h-4 w-40" />
+                    <Skeleton className="h-3 w-32" />
+                    <Skeleton className="h-3 w-56" />
+                  </div>
                 </div>
-                <Skeleton className="h-3 w-56" />
-                <Skeleton className="h-3 w-32" />
                 <p className="text-xs text-primary font-medium animate-pulse-glow">
-                  TripMaster is finding a better activity…
+                  TripMaster is finding a better option…
                 </p>
               </div>
             );
@@ -145,80 +175,110 @@ function ActivityCard({
     }
   };
 
+  const mapsUrl = activity.gps_coordinates
+    ? `https://www.google.com/maps/search/?api=1&query=${activity.gps_coordinates.latitude},${activity.gps_coordinates.longitude}`
+    : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(activity.title + " " + activity.address)}`;
+
   return (
-    <div className="rounded-lg p-3.5 bg-elevated/50 hover:bg-elevated/80 hover:shadow-sm transition-all duration-200">
-      <div className="flex items-center justify-between mb-2">
-        <div className="flex items-center gap-2">
-          <div className={`h-6 w-6 rounded-md ${cat.bg} flex items-center justify-center`}>
-            <CatIcon className={`h-3.5 w-3.5 ${cat.color}`} />
+    <div className="rounded-lg p-3.5 bg-elevated/50 hover:bg-elevated/80 hover:shadow-sm transition-all duration-200 animate-fade-in-card">
+      {/* Top row: thumbnail + info */}
+      <div className="flex gap-3 mb-2">
+        {activity.thumbnail ? (
+          <img
+            src={activity.thumbnail}
+            alt={activity.title}
+            className="h-16 w-20 rounded-lg object-cover shrink-0 bg-secondary"
+          />
+        ) : (
+          <div className={`h-16 w-20 rounded-lg ${cat.bg} flex items-center justify-center shrink-0`}>
+            <CatIcon className={`h-6 w-6 ${cat.color}`} />
           </div>
-          <span className="font-semibold text-sm">{activity.title}</span>
-          {activity.tag && (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <span>
-                  <Badge variant={tagVariant[activity.tag]} className="text-[10px] cursor-help">
-                    {activity.tag}
-                  </Badge>
-                </span>
-              </TooltipTrigger>
-              <TooltipContent side="top" className="text-xs">
-                Agent-recommended based on your trip context
-              </TooltipContent>
-            </Tooltip>
-          )}
+        )}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center justify-between gap-2 mb-1">
+            <div className="flex items-center gap-2 min-w-0">
+              <span className="font-semibold text-sm truncate">{activity.title}</span>
+              {activity.tag && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span className="shrink-0">
+                      <Badge variant={tagVariant[activity.tag]} className="text-[10px] cursor-help">
+                        {activity.tag}
+                      </Badge>
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent side="top" className="text-xs">
+                    Agent-recommended based on your trip context
+                  </TooltipContent>
+                </Tooltip>
+              )}
+            </div>
+            {activity.price && (
+              <span className="text-sm font-bold font-mono text-primary shrink-0">
+                {activity.price}
+              </span>
+            )}
+          </div>
+
+          {/* Type + Rating */}
+          <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
+            <div className={`h-4 w-4 rounded ${cat.bg} flex items-center justify-center shrink-0`}>
+              <CatIcon className={`h-2.5 w-2.5 ${cat.color}`} />
+            </div>
+            <span>{activity.type}</span>
+            <span className="flex items-center gap-0.5 ml-auto shrink-0">
+              <Star className="h-3 w-3 text-amber-400 fill-amber-400" />
+              <span className="font-medium text-foreground">{activity.rating}</span>
+            </span>
+          </div>
+
+          {/* Address */}
+          <div className="flex items-center gap-1 text-xs text-muted-foreground">
+            <MapPin className="h-3 w-3 shrink-0" />
+            <span className="truncate">{activity.address}</span>
+          </div>
         </div>
-        <span className="text-lg font-bold font-mono text-primary">
-          {activity.price === null ? "Free" : `$${activity.price}`}
-        </span>
       </div>
 
-      <p className="text-sm text-muted-foreground mb-2 leading-snug">{activity.description}</p>
-
-      <div className="flex items-center gap-3 text-xs text-muted-foreground mb-1">
-        <span className="flex items-center gap-1">
-          <Clock className="h-3 w-3" />
-          {activity.duration}
-        </span>
-        <span className="flex items-center gap-1">
-          <CalendarDays className="h-3 w-3" />
-          Day {activity.suggestedDay}
-          {activity.suggestedTime && ` · ${activity.suggestedTime}`}
-        </span>
-        <Badge variant="muted" className="text-[10px] ml-auto">{activity.category}</Badge>
-      </div>
+      {/* Description */}
+      {activity.description && (
+        <p className="text-xs text-muted-foreground leading-snug mb-2 line-clamp-2">
+          {activity.description}
+        </p>
+      )}
 
       {/* Actions */}
-      <div className="pt-3 mt-3 border-t border-border/20 space-y-2">
+      <div className="pt-3 mt-1 border-t border-border/20 space-y-2">
         <div className="flex items-center justify-between">
-          {activity.bookingUrl ? (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <a
-                  href={activity.bookingUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-xs text-muted-foreground hover:text-primary hover:underline flex items-center gap-1 transition-colors"
-                >
-                  <ExternalLink className="h-3 w-3" />
-                  View details
-                </a>
-              </TooltipTrigger>
-              <TooltipContent side="top" className="text-xs">
-                Opens external page
-              </TooltipContent>
-            </Tooltip>
-          ) : (
+          <div className="flex items-center gap-2">
+            {activity.website ? (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <a
+                    href={activity.website}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs text-muted-foreground hover:text-primary hover:underline flex items-center gap-1 transition-colors"
+                  >
+                    <ExternalLink className="h-3 w-3" />
+                    Website
+                  </a>
+                </TooltipTrigger>
+                <TooltipContent side="top" className="text-xs">
+                  Opens external page
+                </TooltipContent>
+              </Tooltip>
+            ) : null}
             <a
-              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(activity.title)}`}
+              href={mapsUrl}
               target="_blank"
               rel="noopener noreferrer"
               className="text-xs text-muted-foreground hover:text-primary hover:underline flex items-center gap-1 transition-colors"
             >
               <MapPin className="h-3 w-3" />
-              View on Maps
+              Map
             </a>
-          )}
+          </div>
           <div className="flex items-center gap-2">
             <Button
               variant="success"

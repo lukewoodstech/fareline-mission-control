@@ -61,7 +61,7 @@ export default function Dashboard() {
   }, [tripStore.selectedLodgingId, tripStore.lodging]);
 
   const activitySpend = useMemo(() => {
-    return activityStore.planned.reduce((sum, p) => sum + (p.activity.price ?? 0), 0);
+    return 0; // Activity prices are descriptive strings (e.g. "$$", "$100+"), not numeric
   }, [activityStore.planned]);
 
   const handleSendItinerary = () => {
@@ -252,7 +252,7 @@ export default function Dashboard() {
 
           {activeTab === "activities" && (
             <>
-              <div className="lg:col-span-6">
+              <div className="lg:col-span-8">
                 <SuggestedActivities
                   activities={activityStore.suggestions}
                   getDecision={activityStore.getActivityDecision}
@@ -260,11 +260,13 @@ export default function Dashboard() {
                   onReject={activityStore.rejectActivity}
                 />
               </div>
-              <div className="lg:col-span-6">
+              <div className="lg:col-span-4 space-y-4">
                 <PlannedActivities
                   planned={activityStore.planned}
-                  tripDepartDate={tripStore.activeTrip.departDate}
                   onRemove={activityStore.removeFromPlan}
+                />
+                <ActivityPreferences
+                  onReoptimize={activityStore.reoptimizeActivities}
                 />
               </div>
             </>
