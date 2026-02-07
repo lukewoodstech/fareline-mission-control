@@ -1,24 +1,10 @@
 /**
- * useLiveDashboard — orchestrates all API data + client-side state.
+ * useDemoDashboard — provides the same interface as useLiveDashboard
+ * but powered entirely by mock data + client-side simulation.
  *
- * Data flow:
- *   Trip / Flights / Lodging / AgentState → polled from backend API
- *   Reasoning + Logs → merged into a unified activity feed
- *   Decisions (select / reject) → client-side only
- *   Budget → client-side overlay (backend doesn't track budget)
- *   Metrics → computed from available API data
- *   Activities → handled separately by useActivityStore (mock)
+ * Used when the backend API is unreachable (e.g. in Lovable preview).
  */
-import { useState, useCallback, useMemo, useEffect } from "react";
-import {
-  useTripQuery,
-  useReasoningQuery,
-  useLogsQuery,
-  useSimulateDelay,
-  useSimulateCancel,
-  useApproveTrip,
-  useModifyTrip,
-} from "./useApi";
+import { useState, useCallback, useMemo, useEffect, useRef } from "react";
 import type {
   AgentAction,
   AgentState,
@@ -28,64 +14,72 @@ import type {
   ImpactMetrics,
   Trip,
 } from "@/types/travel";
+import {
+  mockTrip,
+  mockFlights,
+  mockLodging,
+  mockMetrics,
+  initialActions,
+  demoAgentStates,
+  demoNewActions,
+} from "@/data/mockData";
 
-export function useLiveDashboard(enabled = true) {
-  // ── API queries (poll every 5 s, disabled in demo mode) ──
-  const tripQuery = useTripQuery(enabled);
-  const reasoningQuery = useReasoningQuery(enabled);
-  const logsQuery = useLogsQuery(enabled);
-
-  // ── Mutations ──
-  const simulateDelay = useSimulateDelay();
-  const simulateCancel = useSimulateCancel();
-  const approve = useApproveTrip();
-  const modify = useModifyTrip();
+export function useDemoDashboard() {
+  // ── Demo simulation state ──
+  const [agentState, setAgentStateRaw] = useState<AgentState>("Monitoring");
+  const [actions, setActions] = useState<AgentAction[]>(initialActions);
+  const [metrics, setMetrics] = useState<ImpactMetrics>(mockMetrics);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const stateIndexRef = useRef(0);
+  const actionIndexRef = useRef(0);
 
   // ── Client-side overlay state ──
-  const [localActions, setLocalActions] = useState<AgentAction[]>([]);
-  const [localAgentState, setLocalAgentState] = useState<AgentState | null>(null);
   const [decisions, setDecisions] = useState<OptionDecision[]>([]);
-  const [budget, setBudget] = useState(0);
+  const [budget, setBudget] = useState(mockTrip.budget);
 
-  // ── API-derived data ──
-  const apiTrip = tripQuery.data?.trip ?? null;
-  const apiAgentState = tripQuery.data?.agentState ?? "Idle";
-  const flights: FlightOption[] = tripQuery.data?.flights ?? [];
-  const lodging: LodgingOption[] = tripQuery.data?.lodging ?? [];
+  // ── Static mock data ──
+  const trip: Trip = useMemo(() => ({ ...mockTrip, budget }), [budget]);
+  const flights: FlightOption[] = mockFlights;
+  const lodging: LodgingOption[] = mockLodging;
 
-  // Merge local budget into the trip object so components can read trip.budget
-  const trip: Trip | null = useMemo(() => {
-    if (!apiTrip) return null;
-    return { ...apiTrip, budget };
-  }, [apiTrip, budget]);
+  // ── Demo event simulation (every 5–10s) ──
+  const addDemoEvent = useCallback(() => {
+    const stateIdx = stateIndexRef.current % demoAgentStates.length;
+    const actionIdx = actionIndexRef.current % demoNewActions.length;
 
-  // ── Agent state: local override resets when API state changes ──
-  const agentState: AgentState = localAgentState ?? apiAgentState;
+    setAgentStateRaw(demoAgentStates[stateIdx]);
+
+    const template = demoNewActions[actionIdx];
+    const newAction: AgentAction = {
+      ...template,
+      id: `demo-${Date.now()}`,
+      timestamp: new Date().toISOString(),
+    };
+
+    setActions((prev) => [newAction, ...prev]);
+
+    setMetrics((prev) => ({
+      ...prev,
+      optionsEvaluated: prev.optionsEvaluated + Math.floor(Math.random() * 30 + 10),
+      moneySaved: prev.moneySaved + Math.floor(Math.random() * 8),
+      alertsSent: prev.alertsSent + (template.smsSent ? 1 : 0),
+    }));
+
+    stateIndexRef.current += 1;
+    actionIndexRef.current += 1;
+  }, []);
 
   useEffect(() => {
-    setLocalAgentState(null);
-  }, [apiAgentState]);
+    intervalRef.current = setInterval(() => {
+      addDemoEvent();
+    }, 5000 + Math.random() * 5000);
 
-  // ── Merged activity feed (local events + API reasoning + API logs) ──
-  const actions: AgentAction[] = useMemo(() => {
-    const reasoning = reasoningQuery.data ?? [];
-    const logs = logsQuery.data ?? [];
-    return [...localActions, ...reasoning, ...logs];
-  }, [localActions, reasoningQuery.data, logsQuery.data]);
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
+  }, [addDemoEvent]);
 
-  // ── Computed metrics ──
-  const metrics: ImpactMetrics = useMemo(
-    () => ({
-      moneySaved: 0,
-      baselinePrice: 0,
-      timeSavedHours: 0,
-      alertsSent: actions.filter((a) => a.smsSent).length,
-      optionsEvaluated: flights.length + lodging.length,
-    }),
-    [actions, flights.length, lodging.length],
-  );
-
-  // ── Decision helpers ──
+  // ── Decision helpers (same interface as useLiveDashboard) ──
   const selectedFlightId =
     decisions.find((d) => d.category === "flight" && d.status === "selected")?.optionId ?? null;
   const selectedLodgingId =
@@ -96,16 +90,14 @@ export function useLiveDashboard(enabled = true) {
     [decisions],
   );
 
-  // ── Callbacks for child components ──
   const addAction = useCallback((action: AgentAction) => {
-    setLocalActions((prev) => [action, ...prev]);
+    setActions((prev) => [action, ...prev]);
   }, []);
 
   const setAgentState = useCallback((state: AgentState) => {
-    setLocalAgentState(state);
+    setAgentStateRaw(state);
   }, []);
 
-  // ── Client-side decision management ──
   const selectOption = useCallback(
     (optionId: string, category: "flight" | "lodging") => {
       setDecisions((prev) => {
@@ -155,7 +147,7 @@ export function useLiveDashboard(enabled = true) {
         },
       ]);
 
-      setLocalAgentState(
+      setAgentStateRaw(
         category === "flight" ? "Re-optimizing (Flights)" : "Re-optimizing (Lodging)",
       );
 
@@ -167,11 +159,8 @@ export function useLiveDashboard(enabled = true) {
         detail: "Feedback recorded. Agent will re-optimize on next cycle.",
         smsSent: false,
       });
-
-      // Notify backend to re-optimize
-      modify.mutate();
     },
-    [addAction, modify],
+    [addAction],
   );
 
   const toggleMonitor = useCallback((optionId: string) => {
@@ -184,7 +173,7 @@ export function useLiveDashboard(enabled = true) {
 
   const reoptimize = useCallback(
     (category: "flight" | "lodging", strategy: string) => {
-      setLocalAgentState(
+      setAgentStateRaw(
         category === "flight" ? "Re-optimizing (Flights)" : "Re-optimizing (Lodging)",
       );
       addAction({
@@ -195,32 +184,26 @@ export function useLiveDashboard(enabled = true) {
         detail: `Requesting the agent to find better ${category} options.`,
         smsSent: false,
       });
-      modify.mutate();
     },
-    [addAction, modify],
+    [addAction],
   );
 
   const updateBudget = useCallback((n: number) => setBudget(n), []);
 
-  // ── Loading / error ──
-  const isLoading = tripQuery.isLoading;
-  const error =
-    tripQuery.error?.message ??
-    reasoningQuery.error?.message ??
-    logsQuery.error?.message ??
-    null;
+  // ── Stub mutations (no-op in demo) ──
+  const stubMutation = { mutate: () => {}, isPending: false };
 
   return {
-    // API-sourced
+    // Data
     trip,
     agentState,
     flights,
     lodging,
     actions,
-    isLoading,
-    error,
+    isLoading: false,
+    error: null,
 
-    // Client-side decisions
+    // Decisions
     decisions,
     selectedFlightId,
     selectedLodgingId,
@@ -231,21 +214,21 @@ export function useLiveDashboard(enabled = true) {
     toggleMonitor,
     reoptimize,
 
-    // Budget (client-side)
+    // Budget
     budget,
     updateBudget,
 
-    // Metrics (computed)
+    // Metrics
     metrics,
 
-    // Child-component callbacks
+    // Callbacks
     addAction,
     setAgentState,
 
-    // Mutations for simulation controls
-    simulateDelay,
-    simulateCancel,
-    approve,
-    modify,
+    // Stub mutations
+    simulateDelay: stubMutation,
+    simulateCancel: stubMutation,
+    approve: stubMutation,
+    modify: stubMutation,
   };
 }
