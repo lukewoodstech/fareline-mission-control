@@ -4,7 +4,7 @@ import type { ActivityOption } from "@/types/travel";
 export const mockActivities: ActivityOption[] = [
   {
     id: "act-1",
-    title: "Gaslamp Quarter Food Tour",
+    title: "Food Tour",
     category: "Food",
     description: "Guided tasting tour through 6 restaurants in the Gaslamp — tacos, craft beer, and dessert.",
     duration: "2.5h",
@@ -16,7 +16,7 @@ export const mockActivities: ActivityOption[] = [
   },
   {
     id: "act-2",
-    title: "Sunset Kayaking at La Jolla Cove",
+    title: "Kayaking Excursion",
     category: "Outdoor",
     description: "Paddle through sea caves at golden hour. Sea lions and dolphins commonly spotted.",
     duration: "2h",
@@ -28,7 +28,7 @@ export const mockActivities: ActivityOption[] = [
   },
   {
     id: "act-3",
-    title: "USS Midway Museum",
+    title: "Museum Visit",
     category: "Culture",
     description: "Self-guided tour of the historic aircraft carrier with 60+ exhibits and restored aircraft.",
     duration: "2–3h",
@@ -40,7 +40,7 @@ export const mockActivities: ActivityOption[] = [
   },
   {
     id: "act-4",
-    title: "Rooftop Jazz at The Nolen",
+    title: "Live Music Night",
     category: "Event",
     description: "Live jazz trio with craft cocktails overlooking the San Diego skyline.",
     duration: "2h",
@@ -51,7 +51,7 @@ export const mockActivities: ActivityOption[] = [
   },
   {
     id: "act-5",
-    title: "Morning Yoga at Coronado Beach",
+    title: "Beach Yoga Class",
     category: "Relaxation",
     description: "Beachside vinyasa flow class with panoramic ocean views. All levels welcome.",
     duration: "1h",
@@ -64,7 +64,7 @@ export const mockActivities: ActivityOption[] = [
 export const replacementActivities: ActivityOption[] = [
   {
     id: "act-r1",
-    title: "Balboa Park & Botanical Garden",
+    title: "Park & Garden Walk",
     category: "Culture",
     description: "Explore 17 museums and lush botanical gardens in San Diego's cultural heart.",
     duration: "3h",
@@ -76,7 +76,7 @@ export const replacementActivities: ActivityOption[] = [
   },
   {
     id: "act-r2",
-    title: "Little Italy Craft Beer Walk",
+    title: "Brewery Tour",
     category: "Food",
     description: "Sample San Diego's best craft beers across 4 breweries with a local guide.",
     duration: "2h",
@@ -88,7 +88,7 @@ export const replacementActivities: ActivityOption[] = [
   },
   {
     id: "act-r3",
-    title: "Torrey Pines Coastal Hike",
+    title: "Coastal Hike",
     category: "Outdoor",
     description: "Scenic trail along dramatic coastal bluffs with ocean views and wildflowers.",
     duration: "2h",
@@ -99,7 +99,7 @@ export const replacementActivities: ActivityOption[] = [
   },
   {
     id: "act-r4",
-    title: "Spa Day at Hotel del Coronado",
+    title: "Spa Day",
     category: "Relaxation",
     description: "Full-service oceanfront spa with massage, facial, and beach access.",
     duration: "3h",
@@ -110,7 +110,7 @@ export const replacementActivities: ActivityOption[] = [
   },
   {
     id: "act-r5",
-    title: "Old Town Taco & Margarita Tour",
+    title: "Taco Walking Tour",
     category: "Food",
     description: "Walk through historic Old Town sampling authentic Mexican cuisine and handmade tortillas.",
     duration: "2h",
