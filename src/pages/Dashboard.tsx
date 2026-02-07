@@ -1,8 +1,10 @@
 import { Link } from "react-router-dom";
 import { Plane, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { useDemoMode } from "@/hooks/useDemoMode";
-import { mockTrip, mockFlights, mockLodging, mockPreferences } from "@/data/mockData";
+import { useTripStore } from "@/hooks/useTripStore";
+import { mockPreferences } from "@/data/mockData";
 
 import AgentStatus from "@/components/dashboard/AgentStatus";
 import LastAgentAction from "@/components/dashboard/LastAgentAction";
@@ -13,25 +15,32 @@ import ImpactMetrics from "@/components/dashboard/ImpactMetrics";
 import Controls from "@/components/dashboard/Controls";
 import PreferencesPanel from "@/components/dashboard/PreferencesPanel";
 import DemoToggle from "@/components/dashboard/DemoToggle";
+import TripSwitcher from "@/components/dashboard/TripSwitcher";
 
 export default function Dashboard() {
   const {
     isDemo,
     setIsDemo,
     agentState,
+    setAgentState,
     currentStep,
     actions,
     metrics,
+    addAction,
   } = useDemoMode();
 
+  const tripStore = useTripStore(addAction, setAgentState);
+
   const lastAction = actions[0];
+
+  const bothSelected = tripStore.selectedFlightId && tripStore.selectedLodgingId;
 
   return (
     <div className="min-h-screen bg-background">
       {/* Top bar */}
       <header className="border-b border-border/50 bg-card/50 backdrop-blur-sm sticky top-0 z-50">
         <div className="container mx-auto flex items-center justify-between h-14 px-4">
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
             <Link to="/">
               <Button variant="ghost" size="sm">
                 <ArrowLeft className="h-3 w-3 mr-1" />
@@ -45,6 +54,13 @@ export default function Dashboard() {
               <span className="font-bold tracking-tight">Fareline</span>
               <span className="text-xs text-muted-foreground font-mono">/ Mission Control</span>
             </div>
+            <div className="h-4 w-px bg-border mx-1" />
+            <TripSwitcher
+              trips={tripStore.trips}
+              activeTrip={tripStore.activeTrip}
+              onSwitchTrip={tripStore.switchTrip}
+              onCreateTrip={tripStore.createTrip}
+            />
           </div>
 
           <DemoToggle isDemo={isDemo} onToggle={setIsDemo} />
@@ -53,11 +69,23 @@ export default function Dashboard() {
 
       {/* Dashboard grid */}
       <main className="container mx-auto px-4 py-6 space-y-6">
+        {/* Trip status banner */}
+        {bothSelected && (
+          <div className="rounded-lg border border-success/30 bg-success/5 px-4 py-3 flex items-center justify-between animate-slide-up">
+            <div className="flex items-center gap-2">
+              <Badge variant="success" className="text-xs">Ready to book</Badge>
+              <span className="text-sm text-muted-foreground">
+                Flight and lodging selected — your trip is locked in.
+              </span>
+            </div>
+          </div>
+        )}
+
         {/* Row 1: Agent Status + Last Action */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <AgentStatus
             state={agentState}
-            trip={mockTrip}
+            trip={tripStore.activeTrip}
             currentStep={currentStep}
           />
           {lastAction && <LastAgentAction action={lastAction} />}
@@ -72,10 +100,24 @@ export default function Dashboard() {
         {/* Row 4: Best Options + Controls */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
           <div className="lg:col-span-4">
-            <BestFlights flights={mockFlights} />
+            <BestFlights
+              flights={tripStore.flights}
+              selectedId={tripStore.selectedFlightId}
+              getDecision={tripStore.getDecision}
+              onSelect={(id) => tripStore.selectOption(id, "flight")}
+              onReject={(id, reason) => tripStore.rejectOption(id, "flight", reason)}
+              onToggleMonitor={tripStore.toggleMonitor}
+            />
           </div>
           <div className="lg:col-span-4">
-            <BestLodging lodging={mockLodging} />
+            <BestLodging
+              lodging={tripStore.lodging}
+              selectedId={tripStore.selectedLodgingId}
+              getDecision={tripStore.getDecision}
+              onSelect={(id) => tripStore.selectOption(id, "lodging")}
+              onReject={(id, reason) => tripStore.rejectOption(id, "lodging", reason)}
+              onToggleMonitor={tripStore.toggleMonitor}
+            />
           </div>
           <div className="lg:col-span-4 space-y-4">
             <Controls />

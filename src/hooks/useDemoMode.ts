@@ -17,6 +17,10 @@ export function useDemoMode() {
   const stateIndexRef = useRef(0);
   const actionIndexRef = useRef(0);
 
+  const addAction = useCallback((action: AgentAction) => {
+    setActions((prev) => [action, ...prev]);
+  }, []);
+
   const addDemoEvent = useCallback(() => {
     const stateIdx = stateIndexRef.current % demoAgentStates.length;
     const actionIdx = actionIndexRef.current % demoNewActions.length;
@@ -79,5 +83,6 @@ export function useDemoMode() {
     actions,
     metrics,
     resetDemo,
+    addAction,
   };
 }

@@ -19,6 +19,8 @@ const typeIcons: Record<AgentAction["type"], React.ElementType> = {
   optimize: Settings2,
   monitor: Eye,
   sms: MessageSquare,
+  trip: Search,
+  reject: BellRing,
 };
 
 const typeLabels: Record<AgentAction["type"], string> = {
@@ -28,6 +30,8 @@ const typeLabels: Record<AgentAction["type"], string> = {
   optimize: "Optimize",
   monitor: "Monitor",
   sms: "SMS Sent",
+  trip: "Trip",
+  reject: "Rejected",
 };
 
 function formatTime(iso: string) {
