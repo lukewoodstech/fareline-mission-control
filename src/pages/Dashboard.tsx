@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Plane, ArrowLeft, MessageSquare, MapPin, Loader2, AlertTriangle } from "lucide-react";
+import { Plane, ArrowLeft, MessageSquare, Loader2, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
@@ -25,6 +25,7 @@ import SuggestedActivities from "@/components/dashboard/SuggestedActivities";
 import PlannedActivities from "@/components/dashboard/PlannedActivities";
 import ActivityPreferences from "@/components/dashboard/ActivityPreferences";
 import BudgetTracker from "@/components/dashboard/BudgetTracker";
+import EmptyTripState from "@/components/dashboard/EmptyTripState";
 
 type DashboardTab = "flights" | "lodging" | "activities";
 
@@ -117,11 +118,11 @@ export default function Dashboard() {
             </div>
             <div className="h-4 w-px bg-white/20 mx-1" />
             <TripSwitcher
-              trips={isDemo ? (dashboard as ReturnType<typeof useDemoDashboard>).trips : (hasTrip ? [dashboard.trip!] : [])}
+              trips={dashboard.trips}
               activeTrip={dashboard.trip}
-              onSwitchTrip={isDemo ? (dashboard as ReturnType<typeof useDemoDashboard>).switchTrip : () => {}}
-              onCreateTrip={isDemo ? (dashboard as ReturnType<typeof useDemoDashboard>).createTrip : undefined}
-              onDeleteTrip={isDemo ? (dashboard as ReturnType<typeof useDemoDashboard>).deleteTrip : undefined}
+              onSwitchTrip={dashboard.switchTrip}
+              onCreateTrip={dashboard.createTrip}
+              onDeleteTrip={dashboard.deleteTrip}
             />
           </div>
           <DemoToggle isDemo={isDemo} onToggle={setIsDemo} />
@@ -157,26 +158,12 @@ export default function Dashboard() {
             </div>
           </div>
         </main>
-      ) : !hasTrip && !isDemo ? (
-        /* Empty state — no active trip from backend */
-        <main className="container mx-auto px-4 py-6 flex items-center justify-center min-h-[calc(100vh-3.5rem)]">
-          <div className="text-center space-y-6 max-w-md mx-auto animate-fade-in">
-            <div className="mx-auto h-20 w-20 rounded-2xl bg-primary/10 flex items-center justify-center">
-              <MapPin className="h-10 w-10 text-primary" />
-            </div>
-            <div className="space-y-2">
-              <h2 className="text-2xl font-bold tracking-tight">No active trip</h2>
-              <p className="text-muted-foreground leading-relaxed">
-                Text your TripMaster agent to start planning a trip.
-                Once the agent begins searching, flights, lodging, and live updates
-                will appear here automatically.
-              </p>
-            </div>
-            <Button variant="outline" onClick={() => setIsDemo(true)}>
-              Try Demo Mode
-            </Button>
-          </div>
-        </main>
+      ) : !hasTrip ? (
+        /* Empty state — no active trip */
+        <EmptyTripState
+          onCreateTrip={dashboard.createTrip}
+          onSwitchToDemo={!isDemo ? () => setIsDemo(true) : undefined}
+        />
       ) : (
         /* Dashboard grid — live or demo data */
         <main className="container mx-auto px-4 py-6 space-y-6">
