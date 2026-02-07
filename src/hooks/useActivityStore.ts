@@ -44,8 +44,18 @@ export function useActivityStore(
       const activity = suggestions.find((a) => a.id === id);
       if (!activity) return;
 
-      // Remove from suggestions
-      setSuggestions((prev) => prev.filter((a) => a.id !== id));
+      // Replace the selected activity with a new suggestion from the pool
+      const idx = replacementIdx.current % replacementActivities.length;
+      const replacement = {
+        ...replacementActivities[idx],
+        id: `act-rep-${Date.now()}`,
+        suggestedDay: activity.suggestedDay,
+      };
+      replacementIdx.current += 1;
+
+      setSuggestions((prev) =>
+        prev.map((a) => (a.id === id ? replacement : a)),
+      );
 
       // Add to planned
       setPlanned((prev) => {
