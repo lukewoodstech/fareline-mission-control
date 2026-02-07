@@ -8,15 +8,40 @@ import type {
   AgentState,
 } from "@/types/travel";
 
-export const mockTrip: Trip = {
-  id: "trip-001",
-  origin: "DEN",
-  destination: "SAN",
-  departDate: "2025-03-14",
-  returnDate: "2025-03-17",
-  budget: 700,
-  travelers: 1,
-};
+export const mockTrips: Trip[] = [
+  {
+    id: "trip-001",
+    origin: "DEN",
+    destination: "SAN",
+    departDate: "2025-03-14",
+    returnDate: "2025-03-17",
+    budget: 700,
+    travelers: 1,
+    status: "Monitoring",
+  },
+  {
+    id: "trip-002",
+    origin: "JFK",
+    destination: "LAX",
+    departDate: "2025-04-02",
+    returnDate: "2025-04-06",
+    budget: 1200,
+    travelers: 2,
+    status: "Planning",
+  },
+  {
+    id: "trip-003",
+    origin: "ORD",
+    destination: "MIA",
+    departDate: "2025-05-10",
+    returnDate: "2025-05-14",
+    budget: 900,
+    travelers: 1,
+    status: "Locked",
+  },
+];
+
+export const mockTrip: Trip = mockTrips[0];
 
 export const mockPreferences: Preferences = {
   avoidRedEyes: true,
@@ -39,6 +64,7 @@ export const mockFlights: FlightOption[] = [
     tag: "Best Value",
     cabin: "Economy",
     bookingClass: "K",
+    bookingUrl: "https://www.united.com",
   },
   {
     id: "fl-2",
@@ -51,6 +77,7 @@ export const mockFlights: FlightOption[] = [
     tag: "Most Flexible",
     cabin: "Wanna Get Away Plus",
     bookingClass: "W",
+    bookingUrl: "https://www.southwest.com",
   },
   {
     id: "fl-3",
@@ -63,6 +90,7 @@ export const mockFlights: FlightOption[] = [
     tag: "Fastest",
     cabin: "Economy",
     bookingClass: "Y",
+    bookingUrl: "https://www.flyfrontier.com",
   },
 ];
 
@@ -78,6 +106,7 @@ export const mockLodging: LodgingOption[] = [
     tag: "Best Value",
     neighborhood: "Gaslamp Quarter",
     cancellation: "Free cancellation until Mar 12",
+    bookingUrl: "https://www.thesofia.com",
   },
   {
     id: "lg-2",
@@ -90,6 +119,7 @@ export const mockLodging: LodgingOption[] = [
     tag: "Top Rated",
     neighborhood: "Gaslamp Quarter",
     cancellation: "Free cancellation until Mar 10",
+    bookingUrl: "https://www.pendry.com",
   },
   {
     id: "lg-3",
@@ -102,6 +132,89 @@ export const mockLodging: LodgingOption[] = [
     tag: "Best Location",
     neighborhood: "Little Italy",
     cancellation: "Non-refundable",
+    bookingUrl: "https://www.hilton.com",
+  },
+];
+
+export const replacementFlights: FlightOption[] = [
+  {
+    id: "fl-r1",
+    airline: "Delta Air Lines",
+    price: 198,
+    departure: "9:00 AM",
+    arrival: "10:30 AM",
+    duration: "2h 30m",
+    stops: 0,
+    tag: "Best Value",
+    cabin: "Economy",
+    bookingClass: "L",
+    bookingUrl: "https://www.delta.com",
+  },
+  {
+    id: "fl-r2",
+    airline: "American Airlines",
+    price: 225,
+    departure: "1:15 PM",
+    arrival: "2:40 PM",
+    duration: "2h 25m",
+    stops: 0,
+    tag: "Most Flexible",
+    cabin: "Main Cabin",
+    bookingClass: "M",
+    bookingUrl: "https://www.aa.com",
+  },
+  {
+    id: "fl-r3",
+    airline: "Spirit Airlines",
+    price: 112,
+    departure: "5:30 AM",
+    arrival: "8:55 AM",
+    duration: "3h 25m",
+    stops: 1,
+    cabin: "Economy",
+    bookingClass: "Y",
+    bookingUrl: "https://www.spirit.com",
+  },
+];
+
+export const replacementLodging: LodgingOption[] = [
+  {
+    id: "lg-r1",
+    name: "Marriott Gaslamp",
+    price: 357,
+    perNight: 119,
+    rating: 4.6,
+    reviewCount: 1980,
+    amenities: ["Free WiFi", "Breakfast Included", "Pool", "Gym"],
+    tag: "Best Value",
+    neighborhood: "Gaslamp Quarter",
+    cancellation: "Free cancellation until Mar 11",
+    bookingUrl: "https://www.marriott.com",
+  },
+  {
+    id: "lg-r2",
+    name: "Hotel del Coronado",
+    price: 520,
+    perNight: 173,
+    rating: 4.7,
+    reviewCount: 4520,
+    amenities: ["Beach Access", "Spa", "Pool", "Restaurant"],
+    tag: "Top Rated",
+    neighborhood: "Coronado",
+    cancellation: "Free cancellation until Mar 9",
+    bookingUrl: "https://www.hoteldel.com",
+  },
+  {
+    id: "lg-r3",
+    name: "Courtyard by Marriott",
+    price: 312,
+    perNight: 104,
+    rating: 4.2,
+    reviewCount: 2100,
+    amenities: ["Free WiFi", "Parking", "Fitness Center"],
+    neighborhood: "Mission Valley",
+    cancellation: "Free cancellation until Mar 12",
+    bookingUrl: "https://www.marriott.com",
   },
 ];
 

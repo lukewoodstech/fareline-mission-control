@@ -6,9 +6,12 @@ import { Activity, Loader2, Pause, Search, CheckCircle2, Eye } from "lucide-reac
 
 const stateConfig: Record<AgentState, { icon: React.ElementType; color: string; badgeVariant: "status" | "success" | "accent" | "muted" }> = {
   "Idle": { icon: Pause, color: "text-muted-foreground", badgeVariant: "muted" },
+  "Initializing": { icon: Loader2, color: "text-primary", badgeVariant: "status" },
   "Searching Flights": { icon: Search, color: "text-primary", badgeVariant: "status" },
   "Searching Lodging": { icon: Search, color: "text-primary", badgeVariant: "status" },
   "Re-optimizing": { icon: Loader2, color: "text-accent", badgeVariant: "accent" },
+  "Re-optimizing (Flights)": { icon: Loader2, color: "text-accent", badgeVariant: "accent" },
+  "Re-optimizing (Lodging)": { icon: Loader2, color: "text-accent", badgeVariant: "accent" },
   "Waiting for Approval": { icon: CheckCircle2, color: "text-accent", badgeVariant: "accent" },
   "Monitoring": { icon: Eye, color: "text-success", badgeVariant: "success" },
 };
@@ -23,7 +26,7 @@ interface AgentStatusProps {
 export default function AgentStatus({ state, trip, currentStep, totalSteps = 5 }: AgentStatusProps) {
   const config = stateConfig[state];
   const Icon = config.icon;
-  const isAnimating = state === "Searching Flights" || state === "Searching Lodging" || state === "Re-optimizing";
+  const isAnimating = state === "Initializing" || state === "Searching Flights" || state === "Searching Lodging" || state === "Re-optimizing" || state === "Re-optimizing (Flights)" || state === "Re-optimizing (Lodging)";
 
   return (
     <Card className="h-full">

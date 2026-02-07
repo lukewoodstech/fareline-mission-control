@@ -1,7 +1,9 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import type { LodgingOption } from "@/types/travel";
+import { Skeleton } from "@/components/ui/skeleton";
+import type { LodgingOption, OptionDecision } from "@/types/travel";
 import { Building2, Star, MapPin } from "lucide-react";
+import OptionActions from "./OptionActions";
 
 const tagVariant: Record<string, "success" | "accent" | "status"> = {
   "Best Value": "success",
@@ -11,9 +13,21 @@ const tagVariant: Record<string, "success" | "accent" | "status"> = {
 
 interface BestLodgingProps {
   lodging: LodgingOption[];
+  selectedId: string | null;
+  getDecision: (id: string) => OptionDecision | undefined;
+  onSelect: (id: string) => void;
+  onReject: (id: string, reason: string) => void;
+  onToggleMonitor: (id: string) => void;
 }
 
-export default function BestLodging({ lodging }: BestLodgingProps) {
+export default function BestLodging({
+  lodging,
+  selectedId,
+  getDecision,
+  onSelect,
+  onReject,
+  onToggleMonitor,
+}: BestLodgingProps) {
   return (
     <Card>
       <CardHeader className="pb-3">
@@ -23,45 +37,89 @@ export default function BestLodging({ lodging }: BestLodgingProps) {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
-        {lodging.map((l) => (
-          <div
-            key={l.id}
-            className="rounded-lg border border-border bg-secondary/30 p-4 hover:border-primary/30 transition-colors"
-          >
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <span className="font-semibold text-sm">{l.name}</span>
-                {l.tag && <Badge variant={tagVariant[l.tag]}>{l.tag}</Badge>}
-              </div>
-              <div className="text-right">
-                <span className="text-xl font-bold font-mono text-primary">${l.price}</span>
-                <p className="text-xs text-muted-foreground">${l.perNight}/night</p>
-              </div>
-            </div>
+        {lodging.map((l) => {
+          const decision = getDecision(l.id);
+          const isReplacing = decision?.status === "replacing";
+          const isSelected = l.id === selectedId;
+          const isDeemphasized = selectedId !== null && !isSelected;
 
-            <div className="flex items-center gap-3 text-sm text-muted-foreground mb-2">
-              <span className="flex items-center gap-1">
-                <Star className="h-3 w-3 text-accent fill-accent" />
-                {l.rating}
-              </span>
-              <span className="text-xs">({l.reviewCount.toLocaleString()} reviews)</span>
-              <span className="flex items-center gap-1 ml-auto">
-                <MapPin className="h-3 w-3" />
-                {l.neighborhood}
-              </span>
-            </div>
+          if (isReplacing) {
+            return (
+              <div
+                key={l.id}
+                className="rounded-lg border border-border bg-secondary/30 p-4 space-y-3"
+              >
+                <div className="flex items-center justify-between">
+                  <Skeleton className="h-4 w-32" />
+                  <Skeleton className="h-6 w-16" />
+                </div>
+                <Skeleton className="h-3 w-48" />
+                <Skeleton className="h-3 w-36" />
+                <Skeleton className="h-3 w-24" />
+                <p className="text-xs text-muted-foreground animate-pulse-glow">
+                  Finding a better option…
+                </p>
+              </div>
+            );
+          }
 
-            <div className="flex flex-wrap gap-1.5 mb-2">
-              {l.amenities.slice(0, 4).map((a) => (
-                <span key={a} className="text-xs px-2 py-0.5 rounded-md bg-secondary text-secondary-foreground">
-                  {a}
+          return (
+            <div
+              key={l.id}
+              className={`rounded-lg border p-4 transition-all ${
+                isSelected
+                  ? "border-success/50 bg-success/5 ring-1 ring-success/20"
+                  : isDeemphasized
+                  ? "border-border bg-secondary/10 opacity-60"
+                  : "border-border bg-secondary/30 hover:border-primary/30"
+              }`}
+            >
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <span className="font-semibold text-sm">{l.name}</span>
+                  {l.tag && <Badge variant={tagVariant[l.tag]}>{l.tag}</Badge>}
+                </div>
+                <div className="text-right">
+                  <span className="text-xl font-bold font-mono text-primary">${l.price}</span>
+                  <p className="text-xs text-muted-foreground">${l.perNight}/night</p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3 text-sm text-muted-foreground mb-2">
+                <span className="flex items-center gap-1">
+                  <Star className="h-3 w-3 text-accent fill-accent" />
+                  {l.rating}
                 </span>
-              ))}
-            </div>
+                <span className="text-xs">({l.reviewCount.toLocaleString()} reviews)</span>
+                <span className="flex items-center gap-1 ml-auto">
+                  <MapPin className="h-3 w-3" />
+                  {l.neighborhood}
+                </span>
+              </div>
 
-            <p className="text-xs text-muted-foreground">{l.cancellation}</p>
-          </div>
-        ))}
+              <div className="flex flex-wrap gap-1.5 mb-2">
+                {l.amenities.slice(0, 4).map((a) => (
+                  <span key={a} className="text-xs px-2 py-0.5 rounded-md bg-secondary text-secondary-foreground">
+                    {a}
+                  </span>
+                ))}
+              </div>
+
+              <p className="text-xs text-muted-foreground">{l.cancellation}</p>
+
+              <OptionActions
+                optionId={l.id}
+                category="lodging"
+                bookingUrl={l.bookingUrl}
+                decision={decision}
+                isSelected={isSelected}
+                onSelect={() => onSelect(l.id)}
+                onReject={(reason) => onReject(l.id, reason)}
+                onToggleMonitor={() => onToggleMonitor(l.id)}
+              />
+            </div>
+          );
+        })}
       </CardContent>
     </Card>
   );
