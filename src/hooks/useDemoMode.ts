@@ -10,7 +10,6 @@ import {
 export function useDemoMode() {
   const [isDemo, setIsDemo] = useState(false);
   const [agentState, setAgentState] = useState<AgentState>("Monitoring");
-  const [currentStep, setCurrentStep] = useState(5);
   const [actions, setActions] = useState<AgentAction[]>(initialActions);
   const [metrics, setMetrics] = useState<ImpactMetrics>(mockMetrics);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -26,7 +25,7 @@ export function useDemoMode() {
     const actionIdx = actionIndexRef.current % demoNewActions.length;
 
     setAgentState(demoAgentStates[stateIdx]);
-    setCurrentStep((prev) => (prev % 5) + 1);
+    setAgentState(demoAgentStates[stateIdx]);
 
     const template = demoNewActions[actionIdx];
     const newAction: AgentAction = {
@@ -68,7 +67,6 @@ export function useDemoMode() {
   const resetDemo = useCallback(() => {
     setActions(initialActions);
     setAgentState("Monitoring");
-    setCurrentStep(5);
     setMetrics(mockMetrics);
     stateIndexRef.current = 0;
     actionIndexRef.current = 0;
@@ -79,7 +77,6 @@ export function useDemoMode() {
     setIsDemo,
     agentState,
     setAgentState,
-    currentStep,
     actions,
     metrics,
     resetDemo,

@@ -18,13 +18,14 @@ import {
   Loader2,
 } from "lucide-react";
 import { toast } from "sonner";
-import type { AgentState } from "@/types/travel";
+import type { AgentAction, AgentState } from "@/types/travel";
 
 interface ControlsProps {
   activeTab: "flights" | "lodging";
   agentState: AgentState;
   onReoptimize: (category: "flight" | "lodging", strategy: string) => void;
   onSetAgentState: (state: AgentState) => void;
+  onAddAction?: (action: AgentAction) => void;
 }
 
 export default function Controls({
@@ -32,6 +33,7 @@ export default function Controls({
   agentState,
   onReoptimize,
   onSetAgentState,
+  onAddAction,
 }: ControlsProps) {
   const [smsSending, setSmsSending] = useState(false);
   const [alertInput, setAlertInput] = useState("");
@@ -70,10 +72,31 @@ export default function Controls({
 
   const handleSmsRequest = () => {
     setSmsSending(true);
+
+    // Log SMS request to activity feed
+    onAddAction?.({
+      id: `act-sms-req-${Date.now()}`,
+      timestamp: new Date().toISOString(),
+      type: "sms",
+      summary: `Shortlist requested via SMS — ${activeTab}`,
+      detail: `TripMaster is compiling your best ${activeTab} options based on your rejections and preferences.`,
+      smsSent: true,
+    });
+
     setTimeout(() => {
       setSmsSending(false);
       toast.success("Shortlist sent to your phone.", {
         position: "top-center",
+      });
+
+      // Log SMS delivery
+      onAddAction?.({
+        id: `act-sms-sent-${Date.now()}`,
+        timestamp: new Date().toISOString(),
+        type: "sms",
+        summary: `SMS shortlist delivered — top 3 ${activeTab}`,
+        detail: `Your curated ${activeTab} shortlist was sent via SMS. Check your phone for the summary.`,
+        smsSent: true,
       });
     }, 1500);
   };

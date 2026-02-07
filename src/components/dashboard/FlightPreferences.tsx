@@ -6,13 +6,19 @@ import { Plane } from "lucide-react";
 
 interface FlightPreferencesProps {
   initial: Preferences;
+  onReoptimize?: (strategy: string) => void;
 }
 
-export default function FlightPreferences({ initial }: FlightPreferencesProps) {
+export default function FlightPreferences({ initial, onReoptimize }: FlightPreferencesProps) {
   const [prefs, setPrefs] = useState(initial);
 
-  const togglePref = (key: keyof Preferences) => {
-    setPrefs((p) => ({ ...p, [key]: !p[key] }));
+  const togglePref = (key: keyof Preferences, label: string) => {
+    setPrefs((p) => {
+      const next = { ...p, [key]: !p[key] };
+      // Trigger agent re-optimization on every toggle
+      onReoptimize?.(`${label}: ${next[key] ? "on" : "off"}`);
+      return next;
+    });
   };
 
   return (
@@ -31,7 +37,7 @@ export default function FlightPreferences({ initial }: FlightPreferencesProps) {
             <span className="text-sm">Avoid red-eyes</span>
             <Switch
               checked={prefs.avoidRedEyes as boolean}
-              onCheckedChange={() => togglePref("avoidRedEyes")}
+              onCheckedChange={() => togglePref("avoidRedEyes", "Avoid red-eyes")}
             />
           </div>
         </div>
@@ -43,14 +49,14 @@ export default function FlightPreferences({ initial }: FlightPreferencesProps) {
             <span className="text-sm">Prefer nonstop</span>
             <Switch
               checked={prefs.preferNonstop as boolean}
-              onCheckedChange={() => togglePref("preferNonstop")}
+              onCheckedChange={() => togglePref("preferNonstop", "Prefer nonstop")}
             />
           </div>
           <div className="flex items-center justify-between">
             <span className="text-sm">Window seat</span>
             <Switch
               checked={prefs.preferWindow as boolean}
-              onCheckedChange={() => togglePref("preferWindow")}
+              onCheckedChange={() => togglePref("preferWindow", "Window seat")}
             />
           </div>
         </div>

@@ -1,14 +1,19 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import type { LodgingOption, OptionDecision } from "@/types/travel";
 import { Building2, Star, MapPin, Check } from "lucide-react";
 import OptionActions from "./OptionActions";
 
-const tagLabels: Record<string, string> = {
-  "Best Value": "Best Value — based on your preferences",
-  "Top Rated": "Top Rated — highest guest scores",
-  "Best Location": "Best Location — closest to your plans",
+const tagTooltips: Record<string, string> = {
+  "Best Value": "Lowest cost per quality based on your preferences",
+  "Top Rated": "Highest guest satisfaction scores",
+  "Best Location": "Closest to your preferred neighborhoods",
 };
 
 const tagVariant: Record<string, "success" | "accent" | "status"> = {
@@ -92,9 +97,18 @@ export default function BestLodging({
                   {isSelected && <Check className="h-3.5 w-3.5 text-success" />}
                   <span className="font-semibold text-sm">{l.name}</span>
                   {l.tag && (
-                    <Badge variant={tagVariant[l.tag]} className="text-[10px]">
-                      {tagLabels[l.tag] ?? l.tag}
-                    </Badge>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span>
+                          <Badge variant={tagVariant[l.tag]} className="text-[10px] cursor-help">
+                            {l.tag}
+                          </Badge>
+                        </span>
+                      </TooltipTrigger>
+                      <TooltipContent side="top" className="text-xs max-w-[200px]">
+                        {tagTooltips[l.tag]}
+                      </TooltipContent>
+                    </Tooltip>
                   )}
                 </div>
                 <div className="text-right">
