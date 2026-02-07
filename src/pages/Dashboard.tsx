@@ -1,11 +1,10 @@
 import { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
-import { Plane, ArrowLeft, MessageSquare, MapPin, Plus } from "lucide-react";
+import { Plane, ArrowLeft, MessageSquare, MapPin, Loader2, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { useDemoMode } from "@/hooks/useDemoMode";
-import { useTripStore } from "@/hooks/useTripStore";
+import { useLiveDashboard } from "@/hooks/useLiveDashboard";
 import { useActivityStore } from "@/hooks/useActivityStore";
 import { mockPreferences } from "@/data/mockData";
 
@@ -20,7 +19,6 @@ import FlightPreferences from "@/components/dashboard/FlightPreferences";
 import LodgingPreferences from "@/components/dashboard/LodgingPreferences";
 
 import TripSwitcher from "@/components/dashboard/TripSwitcher";
-import NewTripModal from "@/components/dashboard/NewTripModal";
 import SuggestedActivities from "@/components/dashboard/SuggestedActivities";
 import PlannedActivities from "@/components/dashboard/PlannedActivities";
 import ActivityPreferences from "@/components/dashboard/ActivityPreferences";
@@ -30,38 +28,27 @@ type DashboardTab = "flights" | "lodging" | "activities";
 
 export default function Dashboard() {
   const [activeTab, setActiveTab] = useState<DashboardTab>("flights");
-  const [blankModalOpen, setBlankModalOpen] = useState(false);
 
-  const {
-    isDemo,
-    setIsDemo,
-    agentState,
-    setAgentState,
-    actions,
-    metrics,
-    addAction,
-  } = useDemoMode();
+  const dashboard = useLiveDashboard();
+  const activityStore = useActivityStore(dashboard.addAction, dashboard.setAgentState);
 
-  const tripStore = useTripStore(addAction, setAgentState);
-  const activityStore = useActivityStore(addAction, setAgentState);
+  const lastAction = dashboard.actions[0];
+  const hasTrip = dashboard.trip !== null;
 
-  const lastAction = actions[0];
-  const hasTrips = tripStore.trips.length > 0 && tripStore.activeTrip !== null;
-
-  const bothSelected = hasTrips && tripStore.selectedFlightId && tripStore.selectedLodgingId;
+  const bothSelected = hasTrip && dashboard.selectedFlightId && dashboard.selectedLodgingId;
 
   // Compute budget spend per category
   const flightSpend = useMemo(() => {
-    if (!tripStore.selectedFlightId) return 0;
-    const flight = tripStore.flights.find((f) => f.id === tripStore.selectedFlightId);
+    if (!dashboard.selectedFlightId) return 0;
+    const flight = dashboard.flights.find((f) => f.id === dashboard.selectedFlightId);
     return flight?.price ?? 0;
-  }, [tripStore.selectedFlightId, tripStore.flights]);
+  }, [dashboard.selectedFlightId, dashboard.flights]);
 
   const lodgingSpend = useMemo(() => {
-    if (!tripStore.selectedLodgingId) return 0;
-    const lodge = tripStore.lodging.find((l) => l.id === tripStore.selectedLodgingId);
+    if (!dashboard.selectedLodgingId) return 0;
+    const lodge = dashboard.lodging.find((l) => l.id === dashboard.selectedLodgingId);
     return lodge?.price ?? 0;
-  }, [tripStore.selectedLodgingId, tripStore.lodging]);
+  }, [dashboard.selectedLodgingId, dashboard.lodging]);
 
   const activitySpend = useMemo(() => {
     return activityStore.planned.reduce(
@@ -71,7 +58,7 @@ export default function Dashboard() {
   }, [activityStore.planned]);
 
   const handleSendItinerary = () => {
-    addAction({
+    dashboard.addAction({
       id: `act-itinerary-${Date.now()}`,
       timestamp: new Date().toISOString(),
       type: "sms",
@@ -111,50 +98,57 @@ export default function Dashboard() {
             </div>
             <div className="h-4 w-px bg-white/20 mx-1" />
             <TripSwitcher
-              trips={tripStore.trips}
-              activeTrip={tripStore.activeTrip}
-              onSwitchTrip={tripStore.switchTrip}
-              onCreateTrip={tripStore.createTrip}
-              onDeleteTrip={tripStore.deleteTrip}
+              trips={hasTrip ? [dashboard.trip!] : []}
+              activeTrip={dashboard.trip}
+              onSwitchTrip={() => {}}
             />
           </div>
         </div>
       </header>
 
-      {/* Empty state when no trips */}
-      {!hasTrips ? (
+      {/* Loading state */}
+      {dashboard.isLoading ? (
+        <main className="container mx-auto px-4 py-6 flex items-center justify-center min-h-[calc(100vh-3.5rem)]">
+          <div className="text-center space-y-4 animate-fade-in">
+            <Loader2 className="h-10 w-10 text-primary animate-spin mx-auto" />
+            <p className="text-muted-foreground">Connecting to TripMaster agent…</p>
+          </div>
+        </main>
+      ) : dashboard.error ? (
+        /* Error state */
+        <main className="container mx-auto px-4 py-6 flex items-center justify-center min-h-[calc(100vh-3.5rem)]">
+          <div className="text-center space-y-4 max-w-md animate-fade-in">
+            <div className="mx-auto h-16 w-16 rounded-2xl bg-destructive/10 flex items-center justify-center">
+              <AlertTriangle className="h-8 w-8 text-destructive" />
+            </div>
+            <div className="space-y-2">
+              <h2 className="text-xl font-bold">Connection Error</h2>
+              <p className="text-sm text-muted-foreground">{dashboard.error}</p>
+            </div>
+            <Button variant="outline" onClick={() => window.location.reload()}>
+              Retry
+            </Button>
+          </div>
+        </main>
+      ) : !hasTrip ? (
+        /* Empty state — no active trip from backend */
         <main className="container mx-auto px-4 py-6 flex items-center justify-center min-h-[calc(100vh-3.5rem)]">
           <div className="text-center space-y-6 max-w-md mx-auto animate-fade-in">
             <div className="mx-auto h-20 w-20 rounded-2xl bg-primary/10 flex items-center justify-center">
               <MapPin className="h-10 w-10 text-primary" />
             </div>
             <div className="space-y-2">
-              <h2 className="text-2xl font-bold tracking-tight">No trips yet</h2>
+              <h2 className="text-2xl font-bold tracking-tight">No active trip</h2>
               <p className="text-muted-foreground leading-relaxed">
-                Create a trip to get started. Once your SMS agent kicks off a search,
-                you'll see flights, lodging, and activities populate right here in real time.
+                Text your TripMaster agent to start planning a trip.
+                Once the agent begins searching, flights, lodging, and live updates
+                will appear here automatically.
               </p>
             </div>
-            <Button
-              size="lg"
-              className="px-8 py-6 text-base rounded-xl"
-              onClick={() => setBlankModalOpen(true)}
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Create Your First Trip
-            </Button>
-            <NewTripModal
-              open={blankModalOpen}
-              onOpenChange={setBlankModalOpen}
-              onCreateTrip={(trip) => {
-                tripStore.createTrip(trip);
-                setBlankModalOpen(false);
-              }}
-            />
           </div>
         </main>
       ) : (
-        /* Dashboard grid */
+        /* Dashboard grid — live data */
         <main className="container mx-auto px-4 py-6 space-y-6">
           {/* Trip status banner */}
           {bothSelected && (
@@ -179,26 +173,26 @@ export default function Dashboard() {
           {/* Row 1: Agent Status + Last Action */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <AgentStatus
-              state={agentState}
-              trip={tripStore.activeTrip!}
+              state={dashboard.agentState}
+              trip={dashboard.trip!}
             />
             {lastAction && <LastAgentAction action={lastAction} />}
           </div>
 
           {/* Row 2: Impact Metrics + Budget */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <ImpactMetrics metrics={metrics} />
+            <ImpactMetrics metrics={dashboard.metrics} />
             <BudgetTracker
-              budget={tripStore.activeTrip!.budget}
+              budget={dashboard.budget}
               flightSpend={flightSpend}
               lodgingSpend={lodgingSpend}
               activitySpend={activitySpend}
-              onUpdateBudget={tripStore.updateBudget}
+              onUpdateBudget={dashboard.updateBudget}
             />
           </div>
 
           {/* Activity Feed */}
-          <LiveActivityFeed actions={actions} />
+          <LiveActivityFeed actions={dashboard.actions} />
 
           {/* Subnav tabs */}
           <nav className="flex items-center gap-1 border-b border-border/20 pb-0">
@@ -226,27 +220,27 @@ export default function Dashboard() {
               <>
                 <div className="lg:col-span-8">
                   <BestFlights
-                    flights={tripStore.flights}
-                    selectedId={tripStore.selectedFlightId}
-                    getDecision={tripStore.getDecision}
-                    onSelect={(id) => tripStore.selectOption(id, "flight")}
-                    onReject={(id, reason) => tripStore.rejectOption(id, "flight", reason)}
-                    onToggleMonitor={tripStore.toggleMonitor}
-                    onUnselect={(id) => tripStore.unselectOption(id, "flight")}
+                    flights={dashboard.flights}
+                    selectedId={dashboard.selectedFlightId}
+                    getDecision={dashboard.getDecision}
+                    onSelect={(id) => dashboard.selectOption(id, "flight")}
+                    onReject={(id, reason) => dashboard.rejectOption(id, "flight", reason)}
+                    onToggleMonitor={dashboard.toggleMonitor}
+                    onUnselect={(id) => dashboard.unselectOption(id, "flight")}
                   />
                 </div>
                 <div className="lg:col-span-4 space-y-4">
                   <Controls
                     key="flights"
                     activeTab="flights"
-                    agentState={agentState}
-                    onReoptimize={tripStore.reoptimize}
-                    onSetAgentState={setAgentState}
-                    onAddAction={addAction}
+                    agentState={dashboard.agentState}
+                    onReoptimize={dashboard.reoptimize}
+                    onSetAgentState={dashboard.setAgentState}
+                    onAddAction={dashboard.addAction}
                   />
                   <FlightPreferences
                     initial={mockPreferences}
-                    onReoptimize={(strategy) => tripStore.reoptimize("flight", strategy)}
+                    onReoptimize={(strategy) => dashboard.reoptimize("flight", strategy)}
                   />
                 </div>
               </>
@@ -256,33 +250,33 @@ export default function Dashboard() {
               <>
                 <div className="lg:col-span-8">
                   <BestLodging
-                    lodging={tripStore.lodging}
-                    selectedId={tripStore.selectedLodgingId}
-                    getDecision={tripStore.getDecision}
-                    onSelect={(id) => tripStore.selectOption(id, "lodging")}
-                    onReject={(id, reason) => tripStore.rejectOption(id, "lodging", reason)}
-                    onToggleMonitor={tripStore.toggleMonitor}
-                    onUnselect={(id) => tripStore.unselectOption(id, "lodging")}
+                    lodging={dashboard.lodging}
+                    selectedId={dashboard.selectedLodgingId}
+                    getDecision={dashboard.getDecision}
+                    onSelect={(id) => dashboard.selectOption(id, "lodging")}
+                    onReject={(id, reason) => dashboard.rejectOption(id, "lodging", reason)}
+                    onToggleMonitor={dashboard.toggleMonitor}
+                    onUnselect={(id) => dashboard.unselectOption(id, "lodging")}
                   />
                 </div>
                 <div className="lg:col-span-4 space-y-4">
                   <Controls
                     key="lodging"
                     activeTab="lodging"
-                    agentState={agentState}
-                    onReoptimize={tripStore.reoptimize}
-                    onSetAgentState={setAgentState}
-                    onAddAction={addAction}
+                    agentState={dashboard.agentState}
+                    onReoptimize={dashboard.reoptimize}
+                    onSetAgentState={dashboard.setAgentState}
+                    onAddAction={dashboard.addAction}
                   />
                   <LodgingPreferences
                     initial={mockPreferences}
-                    destination={tripStore.activeTrip!.destination}
+                    destination={dashboard.trip!.destination}
                     onNeighborhoodChange={(neighborhoods) => {
                       if (neighborhoods.length > 0) {
-                        tripStore.reoptimize("lodging", `area priority: ${neighborhoods[0]}`);
+                        dashboard.reoptimize("lodging", `area priority: ${neighborhoods[0]}`);
                       }
                     }}
-                    onReoptimize={(strategy) => tripStore.reoptimize("lodging", strategy)}
+                    onReoptimize={(strategy) => dashboard.reoptimize("lodging", strategy)}
                   />
                 </div>
               </>
