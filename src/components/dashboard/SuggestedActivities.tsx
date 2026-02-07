@@ -11,16 +11,13 @@ import {
 } from "@/components/ui/tooltip";
 import type { ActivityOption, ActivityCategory, ActivityRejectReason } from "@/types/travel";
 import type { ActivityDecision } from "@/hooks/useActivityStore";
+import ActivityThumbnail, { categoryConfig } from "./ActivityThumbnail";
 import {
   Sparkles,
   Star,
   ExternalLink,
   Check,
   ThumbsDown,
-  UtensilsCrossed,
-  Mountain,
-  Camera,
-  Ticket,
   MapPin,
 } from "lucide-react";
 
@@ -32,13 +29,6 @@ const REJECT_REASONS: ActivityRejectReason[] = [
   "Wrong vibe",
   "Already planned something similar",
 ];
-
-const categoryConfig: Record<ActivityCategory, { icon: typeof UtensilsCrossed; color: string; bg: string }> = {
-  Restaurant: { icon: UtensilsCrossed, color: "text-orange-400", bg: "bg-orange-400/10" },
-  Hike: { icon: Mountain, color: "text-emerald-400", bg: "bg-emerald-400/10" },
-  Sightseeing: { icon: Camera, color: "text-violet-400", bg: "bg-violet-400/10" },
-  Activity: { icon: Ticket, color: "text-amber-400", bg: "bg-amber-400/10" },
-};
 
 const tagVariant: Record<string, "success" | "accent" | "status"> = {
   "Top Pick": "success",
@@ -183,18 +173,7 @@ function ActivityCard({
     <div className="rounded-lg p-3.5 bg-elevated/50 hover:bg-elevated/80 hover:shadow-sm transition-all duration-200 animate-fade-in-card">
       {/* Top row: thumbnail + info */}
       <div className="flex gap-3 mb-2">
-        {activity.thumbnail ? (
-          <img
-            src={activity.thumbnail}
-            alt={activity.title}
-            referrerPolicy="no-referrer"
-            className="h-16 w-20 rounded-lg object-cover shrink-0 bg-secondary"
-          />
-        ) : (
-          <div className={`h-16 w-20 rounded-lg ${cat.bg} flex items-center justify-center shrink-0`}>
-            <CatIcon className={`h-6 w-6 ${cat.color}`} />
-          </div>
-        )}
+        <ActivityThumbnail activity={activity} size="lg" />
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between gap-2 mb-1">
             <div className="flex items-center gap-2 min-w-0">
