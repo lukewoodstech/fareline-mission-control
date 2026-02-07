@@ -67,8 +67,9 @@ export default function PlannedActivities({
           const CatIcon = cat.icon;
           const catColor = categoryColors[p.activity.category];
 
-          const mapsQuery = encodeURIComponent(p.activity.title + ", " + p.activity.address);
-          const mapsUrl = `https://maps.google.com/maps?q=${mapsQuery}`;
+          const mapsUrl = p.activity.gps_coordinates
+            ? `https://www.openstreetmap.org/?mlat=${p.activity.gps_coordinates.latitude}&mlon=${p.activity.gps_coordinates.longitude}#map=16/${p.activity.gps_coordinates.latitude}/${p.activity.gps_coordinates.longitude}`
+            : `https://www.openstreetmap.org/search?query=${encodeURIComponent(p.activity.title + ", " + p.activity.address)}`;
 
           return (
             <div

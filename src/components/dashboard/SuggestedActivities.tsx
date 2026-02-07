@@ -165,8 +165,9 @@ function ActivityCard({
     }
   };
 
-  const mapsQuery = encodeURIComponent(activity.title + ", " + activity.address);
-  const mapsUrl = `https://maps.google.com/maps?q=${mapsQuery}`;
+  const mapsUrl = activity.gps_coordinates
+    ? `https://www.openstreetmap.org/?mlat=${activity.gps_coordinates.latitude}&mlon=${activity.gps_coordinates.longitude}#map=16/${activity.gps_coordinates.latitude}/${activity.gps_coordinates.longitude}`
+    : `https://www.openstreetmap.org/search?query=${encodeURIComponent(activity.title + ", " + activity.address)}`;
 
   return (
     <div className="rounded-lg p-3.5 bg-elevated/50 hover:bg-elevated/80 hover:shadow-sm transition-all duration-200 animate-fade-in-card">
