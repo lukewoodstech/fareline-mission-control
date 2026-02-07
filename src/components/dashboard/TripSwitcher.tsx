@@ -8,6 +8,16 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { ChevronDown, Plus, MapPin, Trash2 } from "lucide-react";
 import type { Trip, TripStatus } from "@/types/travel";
 import NewTripModal from "./NewTripModal";
@@ -41,6 +51,7 @@ export default function TripSwitcher({
   onDeleteTrip,
 }: TripSwitcherProps) {
   const [modalOpen, setModalOpen] = useState(false);
+  const [deleteTrip, setDeleteTrip] = useState<Trip | null>(null);
 
   return (
     <>
@@ -80,7 +91,7 @@ export default function TripSwitcher({
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        onDeleteTrip(trip.id);
+                        setDeleteTrip(trip);
                       }}
                       className="h-5 w-5 rounded flex items-center justify-center text-muted-foreground/50 hover:text-destructive hover:bg-destructive/10 transition-colors"
                     >
@@ -117,6 +128,40 @@ export default function TripSwitcher({
           setModalOpen(false);
         }}
       />
+
+      {/* Delete confirmation */}
+      <AlertDialog open={!!deleteTrip} onOpenChange={(open) => !open && setDeleteTrip(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete trip?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {deleteTrip && (
+                <>
+                  This will permanently remove{" "}
+                  <span className="font-medium text-foreground">
+                    {deleteTrip.origin} → {deleteTrip.destination}
+                  </span>{" "}
+                  and all its selections. This action cannot be undone.
+                </>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => {
+                if (deleteTrip) {
+                  onDeleteTrip(deleteTrip.id);
+                  setDeleteTrip(null);
+                }
+              }}
+            >
+              Delete Trip
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }
