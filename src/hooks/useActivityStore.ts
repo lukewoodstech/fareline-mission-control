@@ -39,49 +39,44 @@ export function useActivityStore(
     [decisions],
   );
 
+  const getNextReplacement = useCallback(() => {
+    const idx = replacementIdx.current % replacementActivities.length;
+    const replacement = {
+      ...replacementActivities[idx],
+      id: `act-rep-${Date.now()}-${idx}`,
+    };
+    replacementIdx.current += 1;
+    return replacement;
+  }, []);
+
   const selectActivity = useCallback(
     (id: string) => {
       const activity = suggestions.find((a) => a.id === id);
       if (!activity) return;
 
-      // Replace the selected activity with a new suggestion from the pool
-      const idx = replacementIdx.current % replacementActivities.length;
-      const replacement = {
-        ...replacementActivities[idx],
-        id: `act-rep-${Date.now()}`,
-        suggestedDay: activity.suggestedDay,
-      };
-      replacementIdx.current += 1;
-
+      // Replace the selected suggestion with a new one from the pool
+      const replacement = getNextReplacement();
       setSuggestions((prev) =>
         prev.map((a) => (a.id === id ? replacement : a)),
       );
 
       // Add to planned
-      setPlanned((prev) => {
-        const dayActivities = prev.filter((p) => p.day === activity.suggestedDay);
-        return [
-          ...prev,
-          {
-            activityId: activity.id,
-            activity,
-            day: activity.suggestedDay,
-            order: dayActivities.length + 1,
-          },
-        ];
-      });
+      setPlanned((prev) => [
+        ...prev,
+        { activityId: activity.id, activity },
+      ]);
 
       const action: AgentAction = {
         id: `act-activity-select-${Date.now()}`,
         timestamp: new Date().toISOString(),
         type: "optimize",
         summary: `Activity added: ${activity.title}`,
-        detail: `Scheduled for Day ${activity.suggestedDay}${activity.suggestedTime ? ` at ${activity.suggestedTime}` : ""}. TripMaster is adjusting remaining suggestions.`,
+        detail: `Added to your itinerary. TripMaster is adjusting remaining suggestions.`,
         smsSent: false,
       };
       onAddAction(action);
     },
-    [suggestions, onAddAction],
+    [suggestions, onAddAction, getNextReplacement],
   );
 
   const rejectActivity = useCallback(
@@ -98,18 +93,13 @@ export function useActivityStore(
         timestamp: new Date().toISOString(),
         type: "reject",
         summary: `Rejected activity — "${reason}"`,
-        detail: `TripMaster is finding a better activity based on your feedback.`,
+        detail: `TripMaster is finding a better option based on your feedback.`,
         smsSent: false,
       };
       onAddAction(rejectAction);
 
       setTimeout(() => {
-        const idx = replacementIdx.current % replacementActivities.length;
-        const replacement = {
-          ...replacementActivities[idx],
-          id: `act-rep-${Date.now()}`,
-        };
-        replacementIdx.current += 1;
+        const replacement = getNextReplacement();
 
         setSuggestions((prev) => prev.map((a) => (a.id === id ? replacement : a)));
         setDecisions((prev) => prev.filter((d) => d.activityId !== id));
@@ -119,14 +109,14 @@ export function useActivityStore(
           id: `act-activity-replace-${Date.now()}`,
           timestamp: new Date().toISOString(),
           type: "optimize",
-          summary: `Found new activity: ${replacement.title}`,
+          summary: `Found new option: ${replacement.title}`,
           detail: `Replaced based on your feedback: "${reason}".`,
           smsSent: false,
         };
         onAddAction(replaceAction);
       }, 2200);
     },
-    [onAddAction, onSetAgentState],
+    [onAddAction, onSetAgentState, getNextReplacement],
   );
 
   const removeFromPlan = useCallback(
@@ -135,14 +125,7 @@ export function useActivityStore(
       setPlanned((prev) => prev.filter((p) => p.activityId !== activityId));
 
       if (removedActivity) {
-        // Add a new replacement suggestion
-        const idx = replacementIdx.current % replacementActivities.length;
-        const replacement = {
-          ...replacementActivities[idx],
-          id: `act-rep-${Date.now()}`,
-          suggestedDay: removedActivity.day,
-        };
-        replacementIdx.current += 1;
+        const replacement = getNextReplacement();
         setSuggestions((prev) => [...prev, replacement]);
 
         const action: AgentAction = {
@@ -150,18 +133,17 @@ export function useActivityStore(
           timestamp: new Date().toISOString(),
           type: "optimize",
           summary: `Removed ${removedActivity.activity.title} from plan`,
-          detail: `TripMaster suggested a replacement for Day ${removedActivity.day}.`,
+          detail: `TripMaster suggested a replacement option.`,
           smsSent: false,
         };
         onAddAction(action);
       }
     },
-    [planned, onAddAction],
+    [planned, onAddAction, getNextReplacement],
   );
 
   const reoptimizeActivities = useCallback(
     (strategy: string) => {
-      // Mark all suggestions as replacing
       const currentIds = suggestions.map((a) => a.id);
 
       setDecisions((prev) => {
@@ -183,20 +165,15 @@ export function useActivityStore(
         timestamp: new Date().toISOString(),
         type: "optimize",
         summary: `Re-optimizing activities — ${strategy}`,
-        detail: `TripMaster is curating new activities based on "${strategy}" preference.`,
+        detail: `TripMaster is curating new options based on "${strategy}" preference.`,
         smsSent: false,
       };
       onAddAction(reoptAction);
 
       setTimeout(() => {
         setSuggestions((prev) =>
-          prev.map((a) => {
-            const idx = replacementIdx.current % replacementActivities.length;
-            const replacement = {
-              ...replacementActivities[idx],
-              id: `act-rep-${Date.now()}-${idx}`,
-            };
-            replacementIdx.current += 1;
+          prev.map(() => {
+            const replacement = getNextReplacement();
             return replacement;
           }),
         );
@@ -215,7 +192,7 @@ export function useActivityStore(
         onAddAction(doneAction);
       }, 2000);
     },
-    [suggestions, onAddAction, onSetAgentState],
+    [suggestions, onAddAction, onSetAgentState, getNextReplacement],
   );
 
   return {

@@ -90,34 +90,36 @@ export type LodgingRejectReason =
   | "Not the vibe"
   | "Amenities missing";
 
-export type ActivityCategory = "Food" | "Outdoor" | "Culture" | "Event" | "Relaxation";
+// ── Activities & Food (SerpAPI shape) ──
+
+export type ActivityCategory = "Restaurant" | "Hike" | "Sightseeing" | "Activity";
 
 export interface ActivityOption {
   id: string;
   title: string;
   category: ActivityCategory;
-  description: string;
-  duration: string;
-  suggestedDay: number;
-  suggestedTime?: string;
-  price: number | null;
+  type: string; // e.g. "Seafood restaurant", "Hiking area", "Tour operator"
+  rating: number;
+  price?: string; // e.g. "$100+", "$$", "$10–20"
+  address: string;
+  description?: string;
+  website?: string;
+  thumbnail?: string;
+  gps_coordinates?: { latitude: number; longitude: number };
   tag?: "Top Pick" | "Local Gem" | "Must Do";
-  bookingUrl?: string;
 }
 
 export type ActivityRejectReason =
   | "Not interested"
   | "Too expensive"
+  | "Too far"
+  | "Bad reviews"
   | "Wrong vibe"
-  | "Too long"
-  | "Bad timing"
   | "Already planned something similar";
 
 export interface PlannedActivity {
   activityId: string;
   activity: ActivityOption;
-  day: number;
-  order: number;
 }
 
 export interface OptionDecision {
