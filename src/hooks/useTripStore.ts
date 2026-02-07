@@ -34,6 +34,7 @@ interface TripStore {
   setAgentState: (state: AgentState) => void;
   reoptimize: (category: "flight" | "lodging", strategy: string) => void;
   updateBudget: (newBudget: number) => void;
+  deleteTrip: (tripId: string) => void;
 }
 
 export function useTripStore(
@@ -328,6 +329,39 @@ export function useTripStore(
     [activeTripId],
   );
 
+  const deleteTrip = useCallback(
+    (tripId: string) => {
+      setTrips((prev) => {
+        const remaining = prev.filter((t) => t.id !== tripId);
+        if (remaining.length === 0) return prev; // prevent deleting last trip
+        return remaining;
+      });
+
+      // If deleting the active trip, switch to the first remaining trip
+      if (tripId === activeTripId) {
+        setTrips((prev) => {
+          const first = prev[0];
+          if (first) setActiveTripId(first.id);
+          return prev;
+        });
+        setDecisions([]);
+        setFlights(mockFlights);
+        setLodging(mockLodging);
+      }
+
+      const action: AgentAction = {
+        id: `act-delete-trip-${Date.now()}`,
+        timestamp: new Date().toISOString(),
+        type: "trip",
+        summary: "Trip deleted",
+        detail: "TripMaster removed the trip and its associated selections.",
+        smsSent: false,
+      };
+      onAddAction(action);
+    },
+    [activeTripId, onAddAction],
+  );
+
   return {
     trips,
     activeTrip,
@@ -347,5 +381,6 @@ export function useTripStore(
     setAgentState: onSetAgentState,
     reoptimize,
     updateBudget,
+    deleteTrip,
   };
 }

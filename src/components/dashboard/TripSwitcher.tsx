@@ -8,7 +8,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ChevronDown, Plus, MapPin } from "lucide-react";
+import { ChevronDown, Plus, MapPin, Trash2 } from "lucide-react";
 import type { Trip, TripStatus } from "@/types/travel";
 import NewTripModal from "./NewTripModal";
 
@@ -30,6 +30,7 @@ interface TripSwitcherProps {
   activeTrip: Trip;
   onSwitchTrip: (tripId: string) => void;
   onCreateTrip: (trip: Omit<Trip, "id" | "status">) => void;
+  onDeleteTrip: (tripId: string) => void;
 }
 
 export default function TripSwitcher({
@@ -37,6 +38,7 @@ export default function TripSwitcher({
   activeTrip,
   onSwitchTrip,
   onCreateTrip,
+  onDeleteTrip,
 }: TripSwitcherProps) {
   const [modalOpen, setModalOpen] = useState(false);
 
@@ -64,9 +66,22 @@ export default function TripSwitcher({
                   <span className="font-mono text-sm font-medium">
                     {trip.origin} → {trip.destination}
                   </span>
-                  <Badge variant={statusVariant[trip.status]} className="text-[10px] py-0 px-1.5">
-                    {trip.status}
-                  </Badge>
+                  <div className="flex items-center gap-1.5">
+                    <Badge variant={statusVariant[trip.status]} className="text-[10px] py-0 px-1.5">
+                      {trip.status}
+                    </Badge>
+                    {trips.length > 1 && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onDeleteTrip(trip.id);
+                        }}
+                        className="h-5 w-5 rounded flex items-center justify-center text-muted-foreground/50 hover:text-destructive hover:bg-destructive/10 transition-colors"
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </button>
+                    )}
+                  </div>
                 </div>
                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
                   <span>
