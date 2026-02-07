@@ -7,6 +7,8 @@ import type {
 } from "@/types/travel";
 import { mockActivities, replacementActivities } from "@/data/mockActivities";
 
+let actIdCounter = 0;
+
 export interface ActivityDecision {
   activityId: string;
   status: "replacing" | "none";
@@ -41,9 +43,10 @@ export function useActivityStore(
 
   const getNextReplacement = useCallback(() => {
     const idx = replacementIdx.current % replacementActivities.length;
+    actIdCounter += 1;
     const replacement = {
       ...replacementActivities[idx],
-      id: `act-rep-${Date.now()}-${idx}`,
+      id: `act-rep-${actIdCounter}-${Date.now()}`,
     };
     replacementIdx.current += 1;
     return replacement;
